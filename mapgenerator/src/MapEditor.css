@@ -1,0 +1,335 @@
+.map-editor {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  background: #1a1a1a;
+  color: #ffffff;
+  overflow: hidden;
+}
+
+.side-panel {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 280px;
+  background: linear-gradient(135deg, #2d2d2d 0%, #1f1f1f 100%);
+  padding: 1.5rem;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.left-panel {
+  left: 0;
+  border-right: 2px solid #3a3a3a;
+}
+
+.right-panel {
+  right: 0;
+  border-left: 2px solid #3a3a3a;
+  align-items: flex-end;
+}
+
+.panel-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #646cff 0%, #535bf2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.panel-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tool-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border: 2px solid #3a3a3a;
+  background: #2a2a2a;
+  color: #ffffff;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+}
+
+.tool-button:hover {
+  background: #353535;
+  border-color: #646cff;
+}
+
+.tool-button.active {
+  background: linear-gradient(135deg, #646cff 0%, #535bf2 100%);
+  border-color: #646cff;
+  box-shadow: 0 4px 12px rgba(100, 108, 255, 0.4);
+}
+
+.tool-button.delete-button {
+  background: #2a2a2a;
+  border-color: #ff4444;
+}
+
+.tool-button.delete-button:hover {
+  background: #ff4444;
+  border-color: #ff6666;
+  box-shadow: 0 4px 8px rgba(255, 68, 68, 0.3);
+}
+
+.tool-button.export-button {
+  background: #2a2a2a;
+  border-color: #00aa44;
+}
+
+.tool-button.export-button:hover {
+  background: #00aa44;
+  border-color: #00cc55;
+  box-shadow: 0 4px 8px rgba(0, 170, 68, 0.3);
+}
+
+.tool-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #1a1a1a;
+  border-color: #2a2a2a;
+}
+
+.tool-button.export-button:disabled {
+  background: #1a1a1a;
+  border-color: #2a2a2a;
+}
+
+.tool-button:disabled:hover {
+  background: #1a1a1a;
+  border-color: #2a2a2a;
+  box-shadow: none;
+}
+
+.tool-hint {
+  padding: 0.5rem 1rem;
+  background: rgba(100, 108, 255, 0.1);
+  border: 1px solid rgba(100, 108, 255, 0.3);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #a0a0ff;
+}
+
+.export-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  align-items: flex-end;
+}
+
+.wall-parameters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  align-items: flex-end;
+}
+
+.zoom-indicator {
+  padding: 0.5rem 1rem;
+  background: rgba(100, 108, 255, 0.1);
+  border: 1px solid rgba(100, 108, 255, 0.3);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #a0a0ff;
+}
+
+.parameter-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #ffffff;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.parameter-input {
+  padding: 0.4rem 0.6rem;
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 4px;
+  color: #ffffff;
+  font-size: 0.9rem;
+  width: 80px;
+  text-align: center;
+}
+
+.parameter-input:focus {
+  outline: none;
+  border-color: #646cff;
+  box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.2);
+}
+
+.canvas {
+  position: absolute;
+  left: 280px;
+  right: 280px;
+  top: 0;
+  bottom: 0;
+  overflow: hidden;
+  background: #1e1e1e;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.canvas:has(.tool-button.active[title*="Puerta"]) {
+  cursor: pointer;
+}
+
+.canvas-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(to right, rgba(100, 108, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(100, 108, 255, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+  pointer-events: none;
+}
+
+.room {
+  position: absolute;
+  background: rgba(100, 108, 255, 0.2);
+  border: 2px solid #646cff;
+  border-radius: 4px;
+  cursor: move;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  pointer-events: auto;
+}
+
+.room:hover {
+  background: rgba(100, 108, 255, 0.3);
+  border-color: #7c84ff;
+}
+
+.room.selected {
+  background: rgba(100, 108, 255, 0.35);
+  border: 3px solid #646cff;
+  box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.3), 0 4px 12px rgba(100, 108, 255, 0.4);
+  z-index: 10;
+}
+
+.room.preview {
+  background: rgba(100, 108, 255, 0.15);
+  border: 2px dashed #646cff;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.corner-handle {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: #646cff;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  cursor: nwse-resize;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  pointer-events: auto;
+  z-index: 20;
+}
+
+.corner-handle:hover {
+  background: #7c84ff;
+}
+
+.corner-handle.top-left {
+  top: -8px;
+  left: -8px;
+  cursor: nwse-resize;
+}
+
+.corner-handle.top-right {
+  top: -8px;
+  right: -8px;
+  cursor: nesw-resize;
+}
+
+.corner-handle.bottom-left {
+  bottom: -8px;
+  left: -8px;
+  cursor: nesw-resize;
+}
+
+.corner-handle.bottom-right {
+  bottom: -8px;
+  right: -8px;
+  cursor: nwse-resize;
+}
+
+.wall-cut {
+  position: absolute;
+  background: #ffaa00;
+  border: 2px solid #ff8800;
+  border-radius: 2px;
+  z-index: 15;
+  box-shadow: 0 2px 4px rgba(255, 170, 0, 0.4);
+  cursor: move;
+  pointer-events: auto;
+}
+
+.wall-cut:hover {
+  background: #ffbb33;
+  border-color: #ff9900;
+}
+
+.wall-cut.selected {
+  background: #ffcc44;
+  border: 3px solid #ff8800;
+  box-shadow: 0 0 0 2px rgba(255, 170, 0, 0.3), 0 4px 8px rgba(255, 170, 0, 0.5);
+  z-index: 16;
+}
+
+.wall-cut.preview {
+  background: rgba(255, 170, 0, 0.5);
+  border: 2px dashed #ffaa00;
+  opacity: 0.8;
+  z-index: 14;
+  cursor: pointer;
+}
+
+/* Scrollbar styling */
+.canvas::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.canvas::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+.canvas::-webkit-scrollbar-thumb {
+  background: #3a3a3a;
+  border-radius: 6px;
+}
+
+.canvas::-webkit-scrollbar-thumb:hover {
+  background: #4a4a4a;
+}
+
