@@ -12,6 +12,10 @@ export default function MapEditor() {
   const [selectedPolygonId, setSelectedPolygonId] = useState<string | null>(null);
   const [selectedDoorId, setSelectedDoorId] = useState<string | null>(null);
   const [selectedPointIndex, setSelectedPointIndex] = useState<number | null>(null);
+  const [selectedPoints, setSelectedPoints] = useState<{polygonId: string, pointIndex: number}[]>([]);
+  const [isBoxSelecting, setIsBoxSelecting] = useState(false);
+  const [boxSelectStart, setBoxSelectStart] = useState<Point | null>(null);
+  const [boxSelectEnd, setBoxSelectEnd] = useState<Point | null>(null);
   const [tool, setTool] = useState<Tool>('select');
   const [isDraggingPoint, setIsDraggingPoint] = useState(false);
   const [dragStart, setDragStart] = useState<Point | null>(null);
@@ -264,35 +268,46 @@ export default function MapEditor() {
       // First check if clicking on a door/cut
       // TODO: Implementar detección de clicks en cortes
 
-      // Solo procesar clicks en puntos si no estamos ya arrastrando
-      // (el arrastre se maneja desde el onMouseDown de los círculos SVG)
-      if (!isDraggingPoint) {
-        // Check if clicking on a point of a polygon
-        const polygonsToCheck = selectedPolygonId 
-          ? [polygons.find(p => p.id === selectedPolygonId), ...polygons.filter(p => p.id !== selectedPolygonId)].filter(Boolean) as WallPolygon[]
-          : polygons;
-
-        for (const polygon of polygonsToCheck) {
-          const pointIndex = getPointFromClick(point, polygon);
-          if (pointIndex !== null) {
-            clickedPolygon = polygon;
-            clickedPointIndex = pointIndex;
-            break;
-          }
-        }
-
-        if (clickedPolygon && clickedPointIndex !== null) {
-          setSelectedPolygonId(clickedPolygon.id);
-          setSelectedPointIndex(clickedPointIndex);
-          setSelectedDoorId(null);
-        } else {
-          setSelectedPolygonId(null);
-          setSelectedPointIndex(null);
-          setSelectedDoorId(null);
+      // Check if clicking on a point of a polygon
+      for (const polygon of polygons) {
+        const pointIndex = getPointFromClick(point, polygon);
+        if (pointIndex !== null) {
+          clickedPolygon = polygon;
+          clickedPointIndex = pointIndex;
+          break;
         }
       }
+
+      if (clickedPolygon && clickedPointIndex !== null) {
+        // Verificar si el punto clickeado ya está en la selección múltiple
+        const isPointSelected = selectedPoints.some(
+          p => p.polygonId === clickedPolygon!.id && p.pointIndex === clickedPointIndex
+        );
+
+        if (isPointSelected) {
+          // Si el punto ya está seleccionado, preparar para arrastrar todos los puntos seleccionados
+          setIsDraggingPoint(true);
+          setDragStart({ x: 0, y: 0 }); // Offset cero para selección múltiple
+        } else {
+          // Si el punto no está seleccionado, limpiar selección múltiple y seleccionar solo este
+          setSelectedPoints([]);
+          setSelectedPolygonId(clickedPolygon.id);
+          setSelectedPointIndex(clickedPointIndex);
+          setIsDraggingPoint(true);
+          setDragStart({ x: 0, y: 0 });
+        }
+        setSelectedDoorId(null);
+      } else {
+        // Click en área vacía: iniciar selección rectangular
+        setIsBoxSelecting(true);
+        setBoxSelectStart(point);
+        setBoxSelectEnd(point);
+        setSelectedPolygonId(null);
+        setSelectedPointIndex(null);
+        setSelectedDoorId(null);
+      }
     }
-  }, [tool, polygons, snapToGrid, getPointFromClick, selectedPolygonId, zoom, panOffset, isDrawingWall, currentPolygonPoints, finishPolygon, isDraggingPoint]);
+  }, [tool, polygons, snapToGrid, getPointFromClick, selectedPolygonId, zoom, panOffset, isDrawingWall, currentPolygonPoints, finishPolygon, isDraggingPoint, selectedPoints]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!canvasRef.current) return;
@@ -311,39 +326,113 @@ export default function MapEditor() {
     const y = snapToGrid((e.clientY - rect.top - panOffset.y) / zoom);
     const point: Point = { x, y };
 
+    // Actualizar rectángulo de selección
+    if (isBoxSelecting && boxSelectStart) {
+      setBoxSelectEnd(point);
+      return;
+    }
+
     // Preview del polígono mientras se dibuja
     if (tool === 'drawWall' && isDrawingWall) {
       setPreviewPoint(point);
     }
 
-    // Arrastrar punto de polígono
-    if (isDraggingPoint && selectedPolygonId !== null && selectedPointIndex !== null && dragStart) {
-      const polygon = polygons.find(p => p.id === selectedPolygonId);
-      if (!polygon) return;
+    // Arrastrar puntos
+    if (isDraggingPoint && dragStart) {
+      if (selectedPoints.length > 0) {
+        // Mover todos los puntos seleccionados
+        if (!dragStart.x && !dragStart.y) {
+          // Primera vez que movemos, guardar el punto inicial
+          setDragStart(point);
+          return;
+        }
 
-      // Calcular la nueva posición del punto basada en el offset guardado
-      const newPoint: Point = {
-        x: snapToGrid(point.x - dragStart.x),
-        y: snapToGrid(point.y - dragStart.y)
-      };
+        const deltaX = point.x - dragStart.x;
+        const deltaY = point.y - dragStart.y;
 
-      setPolygons(prev => prev.map(p => 
-        p.id === selectedPolygonId
-          ? {
-              ...p,
-              points: p.points.map((pt, idx) => idx === selectedPointIndex ? newPoint : pt)
-            }
-          : p
-      ));
+        setPolygons(prev => prev.map(polygon => {
+          // Encontrar puntos de este polígono que estén seleccionados
+          const selectedIndices = selectedPoints
+            .filter(sp => sp.polygonId === polygon.id)
+            .map(sp => sp.pointIndex);
+
+          if (selectedIndices.length === 0) return polygon;
+
+          return {
+            ...polygon,
+            points: polygon.points.map((pt, idx) => {
+              if (selectedIndices.includes(idx)) {
+                return {
+                  x: snapToGrid(pt.x + deltaX),
+                  y: snapToGrid(pt.y + deltaY)
+                };
+              }
+              return pt;
+            })
+          };
+        }));
+
+        setDragStart(point);
+      } else if (selectedPolygonId !== null && selectedPointIndex !== null) {
+        // Mover un solo punto
+        if (!dragStart.x && !dragStart.y) {
+          setDragStart(point);
+          return;
+        }
+
+        setPolygons(prev => prev.map(p => 
+          p.id === selectedPolygonId
+            ? {
+                ...p,
+                points: p.points.map((pt, idx) => idx === selectedPointIndex ? point : pt)
+              }
+            : p
+        ));
+      }
     }
-  }, [isDraggingPoint, isPanning, panStart, dragStart, selectedPolygonId, selectedPointIndex, polygons, snapToGrid, tool, zoom, panOffset, isDrawingWall]);
+  }, [isDraggingPoint, isPanning, panStart, dragStart, selectedPolygonId, selectedPointIndex, polygons, snapToGrid, tool, zoom, panOffset, isDrawingWall, isBoxSelecting, boxSelectStart, selectedPoints]);
 
   const handleMouseUp = useCallback(() => {
+    // Finalizar selección rectangular
+    if (isBoxSelecting && boxSelectStart && boxSelectEnd) {
+      // Solo procesar si se arrastró (no fue un click simple)
+      const distance = Math.sqrt(
+        Math.pow(boxSelectEnd.x - boxSelectStart.x, 2) + 
+        Math.pow(boxSelectEnd.y - boxSelectStart.y, 2)
+      );
+
+      if (distance > 5) { // Umbral mínimo para considerar que se arrastró
+        const minX = Math.min(boxSelectStart.x, boxSelectEnd.x);
+        const maxX = Math.max(boxSelectStart.x, boxSelectEnd.x);
+        const minY = Math.min(boxSelectStart.y, boxSelectEnd.y);
+        const maxY = Math.max(boxSelectStart.y, boxSelectEnd.y);
+
+        const pointsInBox: {polygonId: string, pointIndex: number}[] = [];
+
+        polygons.forEach(polygon => {
+          polygon.points.forEach((point, index) => {
+            if (point.x >= minX && point.x <= maxX && point.y >= minY && point.y <= maxY) {
+              pointsInBox.push({ polygonId: polygon.id, pointIndex: index });
+            }
+          });
+        });
+
+        setSelectedPoints(pointsInBox);
+      } else {
+        // Fue un click simple en área vacía: limpiar selecciones
+        setSelectedPoints([]);
+      }
+
+      setIsBoxSelecting(false);
+      setBoxSelectStart(null);
+      setBoxSelectEnd(null);
+    }
+
     setIsDraggingPoint(false);
     setIsPanning(false);
     setPanStart(null);
     setDragStart(null);
-  }, []);
+  }, [isBoxSelecting, boxSelectStart, boxSelectEnd, polygons]);
 
   const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -930,34 +1019,45 @@ export default function MapEditor() {
               />
             )}
             {/* Points */}
-            {polygon.points.map((point, idx) => (
-              <circle
-                key={idx}
-                cx={point.x}
-                cy={point.y}
-                r={polygon.id === selectedPolygonId && idx === selectedPointIndex ? 8 : 6}
-                fill={polygon.id === selectedPolygonId ? '#646cff' : '#646cff'}
-                stroke="#ffffff"
-                strokeWidth="2"
-                style={{ pointerEvents: 'auto', cursor: 'move' }}
-                onMouseDown={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  setSelectedPolygonId(polygon.id);
-                  setSelectedPointIndex(idx);
-                  setIsDraggingPoint(true);
-                  // Calcular posición del mouse en coordenadas del mundo
-                  const rect = canvasRef.current?.getBoundingClientRect();
-                  if (rect) {
-                    const x = snapToGrid((e.clientX - rect.left - panOffset.x) / zoom);
-                    const y = snapToGrid((e.clientY - rect.top - panOffset.y) / zoom);
-                    const mousePoint: Point = { x, y };
-                    // Guardar el offset entre el mouse y el punto del polígono
-                    setDragStart({ x: mousePoint.x - point.x, y: mousePoint.y - point.y });
-                  }
-                }}
-              />
-            ))}
+            {polygon.points.map((point, idx) => {
+              const isSelected = selectedPoints.some(sp => sp.polygonId === polygon.id && sp.pointIndex === idx);
+              const isSingleSelected = polygon.id === selectedPolygonId && idx === selectedPointIndex;
+              
+              return (
+                <circle
+                  key={idx}
+                  cx={point.x}
+                  cy={point.y}
+                  r={isSelected || isSingleSelected ? 8 : 6}
+                  fill={isSelected ? '#ff6b6b' : (isSingleSelected ? '#646cff' : '#646cff')}
+                  stroke="#ffffff"
+                  strokeWidth="2"
+                  style={{ pointerEvents: 'auto', cursor: 'move' }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    
+                    // Verificar si el punto ya está en la selección múltiple
+                    const pointIsSelected = selectedPoints.some(
+                      sp => sp.polygonId === polygon.id && sp.pointIndex === idx
+                    );
+                    
+                    if (pointIsSelected) {
+                      // Iniciar arrastre de todos los puntos seleccionados
+                      setIsDraggingPoint(true);
+                      setDragStart({ x: 0, y: 0 });
+                    } else {
+                      // Limpiar selección múltiple y seleccionar solo este punto
+                      setSelectedPoints([]);
+                      setSelectedPolygonId(polygon.id);
+                      setSelectedPointIndex(idx);
+                      setIsDraggingPoint(true);
+                      setDragStart({ x: 0, y: 0 });
+                    }
+                  }}
+                />
+              );
+            })}
           </svg>
         ))}
 
@@ -1020,6 +1120,32 @@ export default function MapEditor() {
         )}
 
         {/* Wall Cuts - TODO: Implementar visualización de cortes en polígonos */}
+        
+        {/* Rectángulo de selección */}
+        {isBoxSelecting && boxSelectStart && boxSelectEnd && (
+          <svg
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              width: '100%',
+              height: '100%',
+              pointerEvents: 'none',
+              zIndex: 1000
+            }}
+          >
+            <rect
+              x={Math.min(boxSelectStart.x, boxSelectEnd.x)}
+              y={Math.min(boxSelectStart.y, boxSelectEnd.y)}
+              width={Math.abs(boxSelectEnd.x - boxSelectStart.x)}
+              height={Math.abs(boxSelectEnd.y - boxSelectStart.y)}
+              fill="rgba(100, 108, 255, 0.1)"
+              stroke="#646cff"
+              strokeWidth="2"
+              strokeDasharray="5,5"
+            />
+          </svg>
+        )}
         </div>
       </div>
     </div>
