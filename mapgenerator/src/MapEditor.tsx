@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import type { WallPolygon, Door, Point, Tool } from './types';
+import type { WallPolygon, Point, Tool } from './types';
 import './MapEditor.css';
 import polygonClipping from 'polygon-clipping';
 import earcut from 'earcut';
@@ -8,9 +8,8 @@ const GRID_SIZE = 20;
 
 export default function MapEditor() {
   const [polygons, setPolygons] = useState<WallPolygon[]>([]);
-  const [doors, setDoors] = useState<Door[]>([]);
+
   const [selectedPolygonId, setSelectedPolygonId] = useState<string | null>(null);
-  const [selectedDoorId, setSelectedDoorId] = useState<string | null>(null);
   const [selectedPointIndex, setSelectedPointIndex] = useState<number | null>(null);
   const [selectedPoints, setSelectedPoints] = useState<{polygonId: string, pointIndex: number}[]>([]);
   const [isBoxSelecting, setIsBoxSelecting] = useState(false);
@@ -22,6 +21,8 @@ export default function MapEditor() {
   const [isDrawingWall, setIsDrawingWall] = useState(false);
   const [currentPolygonPoints, setCurrentPolygonPoints] = useState<Point[]>([]);
   const [previewPoint, setPreviewPoint] = useState<Point | null>(null);
+  const [isAddingToPolygon, setIsAddingToPolygon] = useState(false);
+  const [addToStart, setAddToStart] = useState(false); // true = añadir al inicio, false = al final
   const [zoom, setZoom] = useState(1);
   const [panOffset, setPanOffset] = useState<Point>({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
@@ -31,8 +32,8 @@ export default function MapEditor() {
   
   const canvasRef = useRef<HTMLDivElement>(null);
 
-  // Detectar si hay polígonos cerrados sin aberturas (invalida la exportación)
-  const hasClosedPolygonsWithoutOpenings = useMemo(() => {
+  // Detectar si hay polígonos cerrados (sin aberturas)
+  const hasClosedPolygons = useMemo(() => {
     return polygons.some(polygon => {
       const totalPoints = polygon.points.length;
       if (totalPoints < 2) return false;
@@ -41,15 +42,9 @@ export default function MapEditor() {
       const lastPoint = polygon.points[totalPoints - 1];
       const isClosed = firstPoint.x === lastPoint.x && firstPoint.y === lastPoint.y;
 
-      if (isClosed) {
-        // Verificar si tiene al menos un corte/puerta
-        const hasDoors = doors.some(d => d.polygonId === polygon.id);
-        return !hasDoors; // Retorna true si está cerrado y NO tiene puertas
-      }
-
-      return false;
+      return isClosed;
     });
-  }, [polygons, doors]);
+  }, [polygons]);
 
   const snapToGrid = useCallback((value: number): number => {
     return Math.round(value / GRID_SIZE) * GRID_SIZE;
@@ -109,116 +104,6 @@ export default function MapEditor() {
     return null;
   }, []); */
 
-  // TODO: Implementar detección de polígonos adyacentes
-  /* const findAdjacentRoom = useCallback((room: Room, wall: 'top' | 'right' | 'bottom' | 'left', position: number): Room | null => {
-    const threshold = 5; // Tolerance for adjacency
-    
-    for (const otherRoom of rooms) {
-      if (otherRoom.id === room.id) continue;
-      
-      let isAdjacent = false;
-      
-      switch (wall) {
-        case 'top':
-          // Check if other room is below and shares the wall segment
-          if (Math.abs(otherRoom.y - (room.y + room.height)) < threshold) {
-            const doorX = room.x + position * room.width;
-            if (doorX >= otherRoom.x && doorX <= otherRoom.x + otherRoom.width) {
-              isAdjacent = true;
-            }
-          }
-          break;
-        case 'right':
-          // Check if other room is to the right
-          if (Math.abs(otherRoom.x - (room.x + room.width)) < threshold) {
-            const doorY = room.y + position * room.height;
-            if (doorY >= otherRoom.y && doorY <= otherRoom.y + otherRoom.height) {
-              isAdjacent = true;
-            }
-          }
-          break;
-        case 'bottom':
-          // Check if other room is below
-          if (Math.abs(room.y - (otherRoom.y + otherRoom.height)) < threshold) {
-            const doorX = room.x + position * room.width;
-            if (doorX >= otherRoom.x && doorX <= otherRoom.x + otherRoom.width) {
-              isAdjacent = true;
-            }
-          }
-          break;
-        case 'left':
-          // Check if other room is to the left
-          if (Math.abs(room.x - (otherRoom.x + otherRoom.width)) < threshold) {
-            const doorY = room.y + position * room.height;
-            if (doorY >= otherRoom.y && doorY <= otherRoom.y + otherRoom.height) {
-              isAdjacent = true;
-            }
-          }
-          break;
-      }
-      
-      if (isAdjacent) {
-        return otherRoom;
-      }
-    }
-    
-    return null;
-  }, [rooms]); */
-
-  // TODO: Implementar detección de cortes en polígonos
-  /* const getDoorFromPoint = useCallback((point: Point): Door | null => {
-    const cutSize = GRID_SIZE; // Tamaño del corte: una celda de rejilla
-    const threshold = cutSize / 2 + 8;
-
-    for (const door of doors) {
-      const room = rooms.find(r => r.id === door.roomId);
-      if (!room) continue;
-
-      let doorX: number;
-      let doorY: number;
-      let doorW: number;
-      let doorH: number;
-
-      switch (door.wall) {
-        case 'top':
-          doorX = room.x + door.position * room.width - cutSize / 2;
-          doorY = room.y;
-          doorW = cutSize;
-          doorH = cutSize;
-          break;
-        case 'right':
-          doorX = room.x + room.width - cutSize;
-          doorY = room.y + door.position * room.height - cutSize / 2;
-          doorW = cutSize;
-          doorH = cutSize;
-          break;
-        case 'bottom':
-          doorX = room.x + door.position * room.width - cutSize / 2;
-          doorY = room.y + room.height - cutSize;
-          doorW = cutSize;
-          doorH = cutSize;
-          break;
-        case 'left':
-          doorX = room.x;
-          doorY = room.y + door.position * room.height - cutSize / 2;
-          doorW = cutSize;
-          doorH = cutSize;
-          break;
-        default:
-          continue;
-      }
-
-      if (
-        point.x >= doorX - threshold &&
-        point.x <= doorX + doorW + threshold &&
-        point.y >= doorY - threshold &&
-        point.y <= doorY + doorH + threshold
-      ) {
-        return door;
-      }
-    }
-    return null;
-  }, [doors, rooms]); */
 
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!canvasRef.current) return;
@@ -231,11 +116,17 @@ export default function MapEditor() {
       return;
     }
     
-    // Click derecho para finalizar polígono
-    if (e.button === 2 && isDrawingWall) {
-      e.preventDefault();
-      finishPolygon();
-      return;
+    // Click derecho para finalizar polígono o añadir puntos
+    if (e.button === 2) {
+      if (isDrawingWall) {
+        e.preventDefault();
+        finishPolygon();
+        return;
+      } else if (isAddingToPolygon) {
+        e.preventDefault();
+        handleFinishAddingPoints();
+        return;
+      }
     }
     
     // Don't handle other buttons except left click
@@ -246,7 +137,32 @@ export default function MapEditor() {
     const y = snapToGrid((e.clientY - rect.top - panOffset.y) / zoom);
     const point: Point = { x, y };
 
-    if (tool === 'drawWall') {
+    if (isAddingToPolygon && selectedPolygonId) {
+      // Modo: añadir puntos a un polígono existente
+      setPolygons(prev => prev.map(polygon => {
+        if (polygon.id !== selectedPolygonId) return polygon;
+        
+        // Evitar duplicar el mismo punto
+        const lastPoint = addToStart ? polygon.points[0] : polygon.points[polygon.points.length - 1];
+        if (lastPoint && lastPoint.x === point.x && lastPoint.y === point.y) {
+          return polygon;
+        }
+        
+        return {
+          ...polygon,
+          points: addToStart 
+            ? [point, ...polygon.points] 
+            : [...polygon.points, point]
+        };
+      }));
+      
+      // Actualizar el índice del punto seleccionado si estamos añadiendo al inicio
+      if (addToStart && selectedPointIndex !== null) {
+        setSelectedPointIndex(selectedPointIndex + 1);
+      }
+      
+      return;
+    } else if (tool === 'drawWall') {
       // Si estamos dibujando, añadir punto al polígono actual
       if (isDrawingWall) {
         // Evitar duplicar el mismo punto
@@ -264,9 +180,6 @@ export default function MapEditor() {
       // Select mode
       let clickedPolygon: WallPolygon | null = null;
       let clickedPointIndex: number | null = null;
-
-      // First check if clicking on a door/cut
-      // TODO: Implementar detección de clicks en cortes
 
       // Check if clicking on a point of a polygon
       for (const polygon of polygons) {
@@ -295,8 +208,12 @@ export default function MapEditor() {
           setSelectedPointIndex(clickedPointIndex);
           setIsDraggingPoint(true);
           setDragStart({ x: 0, y: 0 });
+          // Desactivar modo añadir puntos al seleccionar otro punto
+          if (isAddingToPolygon) {
+            setIsAddingToPolygon(false);
+            setPreviewPoint(null);
+          }
         }
-        setSelectedDoorId(null);
       } else {
         // Click en área vacía: iniciar selección rectangular
         setIsBoxSelecting(true);
@@ -304,10 +221,14 @@ export default function MapEditor() {
         setBoxSelectEnd(point);
         setSelectedPolygonId(null);
         setSelectedPointIndex(null);
-        setSelectedDoorId(null);
+        // Desactivar modo añadir puntos al hacer click en área vacía
+        if (isAddingToPolygon) {
+          setIsAddingToPolygon(false);
+          setPreviewPoint(null);
+        }
       }
     }
-  }, [tool, polygons, snapToGrid, getPointFromClick, selectedPolygonId, zoom, panOffset, isDrawingWall, currentPolygonPoints, finishPolygon, isDraggingPoint, selectedPoints]);
+  }, [tool, polygons, snapToGrid, getPointFromClick, selectedPolygonId, zoom, panOffset, isDrawingWall, currentPolygonPoints, finishPolygon, selectedPoints, isAddingToPolygon, selectedPointIndex, addToStart]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!canvasRef.current) return;
@@ -332,8 +253,8 @@ export default function MapEditor() {
       return;
     }
 
-    // Preview del polígono mientras se dibuja
-    if (tool === 'drawWall' && isDrawingWall) {
+    // Preview del polígono mientras se dibuja o se añaden puntos
+    if ((tool === 'drawWall' && isDrawingWall) || isAddingToPolygon) {
       setPreviewPoint(point);
     }
 
@@ -390,7 +311,7 @@ export default function MapEditor() {
         ));
       }
     }
-  }, [isDraggingPoint, isPanning, panStart, dragStart, selectedPolygonId, selectedPointIndex, polygons, snapToGrid, tool, zoom, panOffset, isDrawingWall, isBoxSelecting, boxSelectStart, selectedPoints]);
+  }, [isDraggingPoint, isPanning, panStart, dragStart, selectedPolygonId, selectedPointIndex, polygons, snapToGrid, tool, zoom, panOffset, isDrawingWall, isBoxSelecting, boxSelectStart, selectedPoints, isAddingToPolygon]);
 
   const handleMouseUp = useCallback(() => {
     // Finalizar selección rectangular
@@ -459,12 +380,6 @@ export default function MapEditor() {
     setPanOffset({ x: newPanX, y: newPanY });
   }, [zoom, panOffset]);
 
-  const handleDeleteDoor = useCallback(() => {
-    if (selectedDoorId) {
-      setDoors(prev => prev.filter(d => d.id !== selectedDoorId));
-      setSelectedDoorId(null);
-    }
-  }, [selectedDoorId]);
 
   const handleDrawWall = useCallback(() => {
     setTool('drawWall');
@@ -472,14 +387,89 @@ export default function MapEditor() {
     setCurrentPolygonPoints([]);
   }, []);
 
-  const handleDeletePolygon = useCallback(() => {
-    if (selectedPolygonId) {
-      setPolygons(prev => prev.filter(p => p.id !== selectedPolygonId));
-      setDoors(prev => prev.filter(d => d.polygonId !== selectedPolygonId));
+  const handleAddPointsToWall = useCallback(() => {
+    let polygonId: string | null = null;
+    let pointIndex: number | null = null;
+    
+    // Determinar qué punto usar (selección simple o box selection)
+    if (selectedPolygonId !== null && selectedPointIndex !== null) {
+      polygonId = selectedPolygonId;
+      pointIndex = selectedPointIndex;
+    } else if (selectedPoints.length === 1) {
+      polygonId = selectedPoints[0].polygonId;
+      pointIndex = selectedPoints[0].pointIndex;
+    }
+    
+    if (polygonId === null || pointIndex === null) return;
+    
+    const polygon = polygons.find(p => p.id === polygonId);
+    if (!polygon) return;
+    
+    // Determinar si estamos en el inicio o final del polígono
+    const isStart = pointIndex === 0;
+    const isEnd = pointIndex === polygon.points.length - 1;
+    
+    if (isStart || isEnd) {
+      // Actualizar el estado para que coincida con la selección
+      setSelectedPolygonId(polygonId);
+      setSelectedPointIndex(pointIndex);
+      setSelectedPoints([]); // Limpiar selección múltiple
+      
+      setIsAddingToPolygon(true);
+      setAddToStart(isStart);
+      setTool('select'); // Mantener en modo select
+    }
+  }, [selectedPolygonId, selectedPointIndex, selectedPoints, polygons]);
+
+  const handleFinishAddingPoints = useCallback(() => {
+    setIsAddingToPolygon(false);
+    setPreviewPoint(null);
+    setAddToStart(false);
+  }, []);
+
+  const handleDeletePoints = useCallback(() => {
+    if (selectedPoints.length > 0) {
+      // Eliminar múltiples puntos seleccionados
+      setPolygons(prev => prev.map(polygon => {
+        const pointsToDelete = selectedPoints
+          .filter(sp => sp.polygonId === polygon.id)
+          .map(sp => sp.pointIndex);
+        
+        if (pointsToDelete.length === 0) return polygon;
+        
+        // Filtrar los puntos que no están en la lista de eliminación
+        const newPoints = polygon.points.filter((_, idx) => !pointsToDelete.includes(idx));
+        
+        // Si quedan menos de 2 puntos, eliminar el polígono completo
+        if (newPoints.length < 2) return null;
+        
+        return {
+          ...polygon,
+          points: newPoints
+        };
+      }).filter(Boolean) as WallPolygon[]);
+      
+      setSelectedPoints([]);
+    } else if (selectedPolygonId !== null && selectedPointIndex !== null) {
+      // Eliminar un solo punto seleccionado
+      setPolygons(prev => prev.map(polygon => {
+        if (polygon.id !== selectedPolygonId) return polygon;
+        
+        const newPoints = polygon.points.filter((_, idx) => idx !== selectedPointIndex);
+        
+        // Si quedan menos de 2 puntos, eliminar el polígono completo
+        if (newPoints.length < 2) return null;
+        
+        return {
+          ...polygon,
+          points: newPoints
+        };
+      }).filter(Boolean) as WallPolygon[]);
+      
       setSelectedPolygonId(null);
       setSelectedPointIndex(null);
     }
-  }, [selectedPolygonId]);
+  }, [selectedPoints, selectedPolygonId, selectedPointIndex]);
 
   const exportToOBJ = useCallback(() => {
     const thickness = wallThickness * GRID_SIZE;
@@ -814,8 +804,8 @@ export default function MapEditor() {
     });
 
     // Generar archivo OBJ
-    let objContent = '# Map exported from 3D Estance Generator\n';
-    objContent += `# Polygons: ${polygons.length}, Cuts: ${doors.length}\n\n`;
+    let objContent = '# Map exported from Facility Generator\n';
+    objContent += `# Polygons: ${polygons.length}\n\n`;
 
     for (let i = 0; i < vertices.length; i += 3) {
       objContent += `v ${vertices[i]} ${vertices[i + 1]} ${vertices[i + 2]}\n`;
@@ -836,7 +826,7 @@ export default function MapEditor() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-  }, [polygons, doors, wallHeight, wallThickness]);
+  }, [polygons, wallHeight, wallThickness]);
 
   // Prevent page scroll when mouse is over canvas, but allow zoom
   useEffect(() => {
@@ -855,27 +845,24 @@ export default function MapEditor() {
     };
   }, []);
 
-  const selectedPolygon = polygons.find(p => p.id === selectedPolygonId);
-  const selectedDoor = doors.find(d => d.id === selectedDoorId);
-
   return (
     <div className="map-editor">
       <div className="side-panel left-panel">
-        <h1 className="panel-title">Editor de Mapas</h1>
+        <h1 className="panel-title">Facility Generator</h1>
         <div className="panel-buttons">
           <button
             className={`tool-button ${tool === 'select' ? 'active' : ''}`}
             onClick={() => setTool('select')}
             title="Seleccionar y mover salas"
           >
-            ✋ Seleccionar
+            ✋ Select and Move
           </button>
           <button
             className={`tool-button ${tool === 'drawWall' ? 'active' : ''}`}
             onClick={handleDrawWall}
             title="Dibujar muro (polígono)"
           >
-            ✏️ Dibujar Muro
+            ✏️ Create Wall
           </button>
           {isDrawingWall && (
             <button
@@ -883,31 +870,74 @@ export default function MapEditor() {
               onClick={finishPolygon}
               title="Finalizar polígono"
             >
-              ✓ Finalizar Polígono
+              ✓ Finish Wall
             </button>
           )}
-          {selectedPolygon && (
+          {(selectedPoints.length > 0 || (selectedPolygonId && selectedPointIndex !== null)) && (
             <button
               className="tool-button delete-button"
-              onClick={handleDeletePolygon}
-              title="Eliminar polígono seleccionado"
+              onClick={handleDeletePoints}
+              title={selectedPoints.length > 0 
+                ? `Delete ${selectedPoints.length} selected point(s)` 
+                : "Delete selected point"}
             >
-              🗑️ Eliminar Polígono
+              🗑️ Delete Point{selectedPoints.length > 1 ? 's' : ''}
             </button>
           )}
-          {selectedDoor && (
-            <button
-              className="tool-button delete-button"
-              onClick={handleDeleteDoor}
-              title="Eliminar puerta seleccionada"
-            >
-              🗑️ Eliminar Puerta
-            </button>
-          )}
+          {(() => {
+            // Verificar si hay un único punto extremo seleccionado (ya sea con click simple o box selection)
+            let polygonId: string | null = null;
+            let pointIndex: number | null = null;
+            
+            if (selectedPolygonId && selectedPointIndex !== null) {
+              // Selección simple
+              polygonId = selectedPolygonId;
+              pointIndex = selectedPointIndex;
+            } else if (selectedPoints.length === 1) {
+              // Box selection con un solo punto
+              polygonId = selectedPoints[0].polygonId;
+              pointIndex = selectedPoints[0].pointIndex;
+            }
+            
+            if (!polygonId || pointIndex === null) return null;
+            
+            const polygon = polygons.find(p => p.id === polygonId);
+            if (!polygon) return null;
+            const isEndpoint = pointIndex === 0 || pointIndex === polygon.points.length - 1;
+            if (!isEndpoint) return null;
+            
+            if (isAddingToPolygon) {
+              return (
+                <button
+                  className="tool-button"
+                  onClick={handleFinishAddingPoints}
+                  title="Finish adding points"
+                >
+                  ✓ Finish Adding Points
+                </button>
+              );
+            } else {
+              return (
+                <button
+                  className="tool-button"
+                  onClick={handleAddPointsToWall}
+                  title="Add more points to this wall endpoint"
+                >
+                  ➕ Add Points To Wall
+                </button>
+              );
+            }
+          })()}
+
         </div>
         {tool === 'drawWall' && (
           <div className="tool-hint">
-            💡 Haz click para añadir puntos al polígono. Click derecho, Enter o botón para finalizar.
+            💡 Left click to add points to the wall polygon . Right click to finish.
+          </div>
+        )}
+        {isAddingToPolygon && (
+          <div className="tool-hint">
+            💡 Left click to add points. Right click to finish.
           </div>
         )}
       </div>
@@ -917,17 +947,17 @@ export default function MapEditor() {
           <button
             className="tool-button export-button"
             onClick={exportToOBJ}
-            disabled={hasClosedPolygonsWithoutOpenings}
-            title={hasClosedPolygonsWithoutOpenings 
-              ? "No se puede exportar: hay polígonos cerrados sin aberturas. Abre el polígono o elimina el último punto."
-              : "Exportar mapa a formato OBJ 3D"
+            disabled={hasClosedPolygons}
+            title={hasClosedPolygons 
+              ? "Cannot export: there are closed polygons. Keep the polygon open or remove the last point."
+              : "Export map to OBJ 3D format"
             }
           >
-            📦 Exportar OBJ
+            📦 Export OBJ
           </button>
-          {hasClosedPolygonsWithoutOpenings && (
+          {hasClosedPolygons && (
             <div className="tool-hint" style={{ color: '#ff6b6b', marginTop: '10px' }}>
-              ⚠️ Los polígonos cerrados necesitan al menos una abertura
+              ⚠️ Closed polygons cannot be exported. Keep walls open.
             </div>
           )}
           <div className="wall-parameters">
@@ -1119,8 +1149,46 @@ export default function MapEditor() {
           </svg>
         )}
 
-        {/* Wall Cuts - TODO: Implementar visualización de cortes en polígonos */}
-        
+        {/* Preview when adding points to existing polygon */}
+        {isAddingToPolygon && selectedPolygonId && previewPoint && (() => {
+          const polygon = polygons.find(p => p.id === selectedPolygonId);
+          if (!polygon) return null;
+          
+          const endPoint = addToStart ? polygon.points[0] : polygon.points[polygon.points.length - 1];
+          
+          return (
+            <svg
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                width: '100%',
+                height: '100%',
+                pointerEvents: 'none',
+                zIndex: 8
+              }}
+            >
+              <line
+                x1={endPoint.x}
+                y1={endPoint.y}
+                x2={previewPoint.x}
+                y2={previewPoint.y}
+                stroke="#646cff"
+                strokeWidth="2"
+                strokeDasharray="5,5"
+              />
+              <circle
+                cx={previewPoint.x}
+                cy={previewPoint.y}
+                r={6}
+                fill="rgba(100, 108, 255, 0.5)"
+                stroke="#646cff"
+                strokeWidth="2"
+              />
+            </svg>
+          );
+        })()}
+
         {/* Rectángulo de selección */}
         {isBoxSelecting && boxSelectStart && boxSelectEnd && (
           <svg
