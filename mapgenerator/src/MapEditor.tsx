@@ -40,6 +40,8 @@ export default function MapEditor() {
     setVisiblePolygons,
     exportTogether,
     setExportTogether,
+    floorWithVolume,
+    setFloorWithVolume,
     hasClosedPolygons,
     setSelectedPolygonId,
     setSelectedPointIndex,
@@ -110,7 +112,7 @@ export default function MapEditor() {
   const handleExportFloor = () => {
     // Filter only visible polygons
     const visiblePolygonsList = polygons.filter(p => visiblePolygons.has(p.id));
-    exportFloorToOBJ(visiblePolygonsList, exportTogether);
+    exportFloorToOBJ(visiblePolygonsList, exportTogether, floorWithVolume);
   };
 
   // Rename polygon handler
@@ -189,6 +191,7 @@ export default function MapEditor() {
         polygons={polygons}
         visiblePolygons={visiblePolygons}
         exportTogether={exportTogether}
+        floorWithVolume={floorWithVolume}
         onExportWalls={handleExportWalls}
         onExportFloor={handleExportFloor}
         onWallHeightChange={setWallHeight}
@@ -203,6 +206,7 @@ export default function MapEditor() {
           setVisiblePolygons(newVisible);
         }}
         onToggleExportTogether={() => setExportTogether(!exportTogether)}
+        onToggleFloorVolume={() => setFloorWithVolume(!floorWithVolume)}
         onRenamePolygon={handleRenamePolygon}
       />
       

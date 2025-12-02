@@ -9,12 +9,14 @@ interface RightPanelProps {
   polygons: WallPolygon[];
   visiblePolygons: Set<string>;
   exportTogether: boolean;
+  floorWithVolume: boolean;
   onExportWalls: () => void;
   onExportFloor: () => void;
   onWallHeightChange: (height: number) => void;
   onWallThicknessChange: (thickness: number) => void;
   onTogglePolygonVisibility: (id: string) => void;
   onToggleExportTogether: () => void;
+  onToggleFloorVolume: () => void;
   onRenamePolygon: (id: string, name: string) => void;
 }
 
@@ -26,12 +28,14 @@ export function RightPanel({
   polygons,
   visiblePolygons,
   exportTogether,
+  floorWithVolume,
   onExportWalls,
   onExportFloor,
   onWallHeightChange,
   onWallThicknessChange,
   onTogglePolygonVisibility,
   onToggleExportTogether,
+  onToggleFloorVolume,
   onRenamePolygon,
 }: RightPanelProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -63,14 +67,30 @@ export function RightPanel({
         >
           📦 Export Walls
         </button>
+
+        {/* Floor with Volume Toggle */}
+        <label className="parameter-label" style={{ display: 'flex', alignItems: 'center', marginTop: '16px', marginBottom: '8px', cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={floorWithVolume}
+            onChange={onToggleFloorVolume}
+            style={{ marginRight: '8px', cursor: 'pointer', width: '16px', height: '16px' }}
+          />
+          <span>Floor with volume (1 unit height)</span>
+        </label>
+
         <button
           className="tool-button export-button"
           onClick={onExportFloor}
-          title={exportTogether 
-            ? "Export all floors together to OBJ 3D format"
-            : "Export each floor separately to OBJ 3D format"
+          title={
+            floorWithVolume
+              ? exportTogether 
+                ? "Export all floors with volume (1 unit height) together"
+                : "Export each floor with volume (1 unit height) separately"
+              : exportTogether 
+                ? "Export all floors as flat surface together"
+                : "Export each floor as flat surface separately"
           }
-          style={{ marginTop: '10px' }}
         >
           🏢 Export Floor
         </button>

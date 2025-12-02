@@ -640,7 +640,7 @@ function exportWallsSeparately(
   alert(`Se han exportado ${polygons.length} archivo(s) de muros`);
 }
 
-function exportFloorsTogether(polygons: WallPolygon[]): void {
+function exportFloorsTogether(polygons: WallPolygon[], withVolume: boolean = false): void {
   if (polygons.length === 0) {
     alert('No hay polígonos para exportar');
     return;
@@ -733,6 +733,56 @@ function exportFloorsTogether(polygons: WallPolygon[]): void {
       const v2 = floorVertices[triangleIndices[i + 2]];
       addFace(v0, v2, v1);
     }
+
+    // If withVolume, add ceiling and walls
+    if (withVolume) {
+      const floorHeight = 1; // 1 unit height
+
+      // CEILING
+      const ceilingVertices: number[] = [];
+      for (let i = 0; i < flatCoords.length; i += 2) {
+        ceilingVertices.push(addVertex(flatCoords[i], floorHeight, flatCoords[i + 1]));
+      }
+      
+      for (let i = 0; i < triangleIndices.length; i += 3) {
+        const v0 = ceilingVertices[triangleIndices[i]];
+        const v1 = ceilingVertices[triangleIndices[i + 1]];
+        const v2 = ceilingVertices[triangleIndices[i + 2]];
+        addFace(v0, v2, v1);
+      }
+
+      // EXTERIOR WALLS
+      for (let i = 0; i < exteriorRing.length - 1; i++) {
+        const curr = exteriorRing[i];
+        const next = exteriorRing[i + 1];
+        
+        const v3 = addVertex(curr[0], 0, curr[1]);
+        const v2 = addVertex(next[0], 0, next[1]);
+        const v1 = addVertex(next[0], floorHeight, next[1]);
+        const v0 = addVertex(curr[0], floorHeight, curr[1]);
+        
+        // Exterior walls face outward (inverted)
+        addFace(v0, v2, v1);
+        addFace(v0, v3, v2);
+      }
+
+      // INTERIOR WALLS (holes)
+      for (const hole of holes) {
+        for (let i = 0; i < hole.length - 1; i++) {
+          const curr = hole[i];
+          const next = hole[i + 1];
+          
+          const v0 = addVertex(curr[0], 0, curr[1]);
+          const v1 = addVertex(next[0], 0, next[1]);
+          const v2 = addVertex(next[0], floorHeight, next[1]);
+          const v3 = addVertex(curr[0], floorHeight, curr[1]);
+          
+          // Interior walls face inward (inverted)
+          addFace(v1, v3, v0);
+          addFace(v1, v2, v3);
+        }
+      }
+    }
   });
 
   // Generate OBJ file
@@ -760,10 +810,10 @@ function exportFloorsTogether(polygons: WallPolygon[]): void {
   URL.revokeObjectURL(url);
 }
 
-export function exportFloorToOBJ(polygons: WallPolygon[], exportTogether: boolean = false): void {
+export function exportFloorToOBJ(polygons: WallPolygon[], exportTogether: boolean = false, withVolume: boolean = false): void {
   if (exportTogether) {
     // Export all floors together
-    exportFloorsTogether(polygons);
+    exportFloorsTogether(polygons, withVolume);
     return;
   }
   
@@ -837,6 +887,39 @@ export function exportFloorToOBJ(polygons: WallPolygon[], exportTogether: boolea
       const v1 = floorVertices[triangleIndices[i + 1]];
       const v2 = floorVertices[triangleIndices[i + 2]];
       addFace(v0, v2, v1);
+    }
+
+    // If withVolume, add ceiling and walls
+    if (withVolume) {
+      const floorHeight = 1; // 1 unit height
+
+      // CEILING
+      const ceilingVertices: number[] = [];
+      for (let i = 0; i < flatCoords.length; i += 2) {
+        ceilingVertices.push(addVertex(flatCoords[i], floorHeight, flatCoords[i + 1]));
+      }
+      
+      for (let i = 0; i < triangleIndices.length; i += 3) {
+        const v0 = ceilingVertices[triangleIndices[i]];
+        const v1 = ceilingVertices[triangleIndices[i + 1]];
+        const v2 = ceilingVertices[triangleIndices[i + 2]];
+        addFace(v0, v2, v1);
+      }
+
+      // EXTERIOR WALLS
+      for (let i = 0; i < points.length - 1; i++) {
+        const curr = points[i];
+        const next = points[i + 1];
+        
+        const v0 = addVertex(curr.x, 0, curr.y);
+        const v1 = addVertex(next.x, 0, next.y);
+        const v2 = addVertex(next.x, floorHeight, next.y);
+        const v3 = addVertex(curr.x, floorHeight, curr.y);
+        
+        // Exterior walls face outward (inverted)
+        addFace(v0, v2, v1);
+        addFace(v0, v3, v2);
+      }
     }
 
     // Generar archivo OBJ
