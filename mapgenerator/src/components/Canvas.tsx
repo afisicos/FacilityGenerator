@@ -21,6 +21,7 @@ interface CanvasProps {
   onMouseUp: (e: React.MouseEvent<HTMLDivElement>) => void;
   onWheel: (e: React.WheelEvent<HTMLDivElement>) => void;
   onPointMouseDown: (polygonId: string, pointIndex: number, e: React.MouseEvent<SVGCircleElement>) => void;
+  onPointDoubleClick: (polygonId: string) => void;
 }
 
 export function Canvas({
@@ -44,6 +45,7 @@ export function Canvas({
   onMouseUp,
   onWheel,
   onPointMouseDown,
+  onPointDoubleClick,
 }: CanvasProps) {
   return (
     <div
@@ -117,6 +119,11 @@ export function Canvas({
                   strokeWidth="2"
                   style={{ pointerEvents: 'auto', cursor: 'move' }}
                   onMouseDown={(e) => onPointMouseDown(polygon.id, idx, e)}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    onPointDoubleClick(polygon.id);
+                  }}
                 />
               );
             })}

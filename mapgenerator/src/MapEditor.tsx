@@ -79,6 +79,22 @@ export default function MapEditor() {
     }
   };
 
+  // Handle point double click - select entire polyline
+  const handlePointDoubleClick = (polygonId: string) => {
+    const polygon = polygons.find(p => p.id === polygonId);
+    if (!polygon) return;
+
+    // Select all points of this polygon
+    const allPoints = polygon.points.map((_, idx) => ({
+      polygonId: polygonId,
+      pointIndex: idx
+    }));
+
+    setSelectedPoints(allPoints);
+    setSelectedPolygonId(null);
+    setSelectedPointIndex(null);
+  };
+
   // Export handlers
   const handleExportWalls = () => {
     exportToOBJ(polygons, wallHeight, wallThickness);
@@ -153,6 +169,7 @@ export default function MapEditor() {
         onMouseUp={handleMouseUp}
         onWheel={handleWheel}
         onPointMouseDown={handlePointMouseDown}
+        onPointDoubleClick={handlePointDoubleClick}
       />
     </div>
   );
