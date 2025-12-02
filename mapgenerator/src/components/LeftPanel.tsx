@@ -31,6 +31,36 @@ export function LeftPanel({
   onAddPointsToWall,
   onFinishAddingPoints,
 }: LeftPanelProps) {
+  // Determinar qué polígono está seleccionado
+  const getSelectedPolygonInfo = () => {
+    let polygonId: string | null = null;
+    
+    // Si hay un punto seleccionado individualmente
+    if (selectedPolygonId) {
+      polygonId = selectedPolygonId;
+    }
+    // Si hay puntos seleccionados múltiples, verificar si todos son del mismo polígono
+    else if (selectedPoints.length > 0) {
+      const firstPolygonId = selectedPoints[0].polygonId;
+      const allSamePolygon = selectedPoints.every(p => p.polygonId === firstPolygonId);
+      if (allSamePolygon) {
+        polygonId = firstPolygonId;
+      }
+    }
+    
+    if (!polygonId) return null;
+    
+    const polygon = polygons.find(p => p.id === polygonId);
+    if (!polygon) return null;
+    
+    const polygonIndex = polygons.findIndex(p => p.id === polygonId) + 1;
+    const displayName = polygon.name || `Polyline ${polygonIndex}`;
+    
+    return { polygon, displayName };
+  };
+
+  const selectedPolygonInfo = getSelectedPolygonInfo();
+
   // Verificar si hay un único punto extremo seleccionado
   const getSelectedEndpoint = () => {
     let polygonId: string | null = null;
@@ -60,6 +90,47 @@ export function LeftPanel({
   return (
     <div className="side-panel left-panel">
       <h1 className="panel-title">Facility Generator</h1>
+      
+      {/* Selected Polyline Info */}
+      {selectedPolygonInfo && (
+        <div style={{
+          padding: '12px',
+          marginBottom: '16px',
+          borderRadius: '6px',
+          backgroundColor: 'rgba(100, 108, 255, 0.15)',
+          border: '1px solid rgba(100, 108, 255, 0.3)',
+        }}>
+          <div style={{
+            fontSize: '11px',
+            color: '#888',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            marginBottom: '6px',
+            fontWeight: 500
+          }}>
+            Selected
+          </div>
+          <div style={{
+            fontSize: '14px',
+            fontWeight: 600,
+            color: '#fff',
+            marginBottom: '4px'
+          }}>
+            {selectedPolygonInfo.displayName}
+          </div>
+          <div style={{
+            fontSize: '12px',
+            color: '#aaa',
+            opacity: 0.8
+          }}>
+            {selectedPolygonInfo.polygon.points.length} points
+            {selectedPoints.length > 0 && selectedPoints.length < selectedPolygonInfo.polygon.points.length && 
+              ` · ${selectedPoints.length} selected`
+            }
+          </div>
+        </div>
+      )}
+
       <div className="panel-buttons">
         <button
           className={`tool-button ${tool === 'select' ? 'active' : ''}`}
