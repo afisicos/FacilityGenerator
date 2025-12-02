@@ -2,7 +2,7 @@ import { useRef, useEffect } from 'react';
 import './MapEditor.css';
 import { useMapState } from './hooks/useMapState';
 import { useMapHandlers } from './hooks/useMapHandlers';
-import { exportToOBJ } from './utils/objExport';
+import { exportToOBJ, exportFloorToOBJ } from './utils/objExport';
 import { LeftPanel } from './components/LeftPanel';
 import { RightPanel } from './components/RightPanel';
 import { Canvas } from './components/Canvas';
@@ -79,9 +79,13 @@ export default function MapEditor() {
     }
   };
 
-  // Export handler
-  const handleExport = () => {
+  // Export handlers
+  const handleExportWalls = () => {
     exportToOBJ(polygons, wallHeight, wallThickness);
+  };
+
+  const handleExportFloor = () => {
+    exportFloorToOBJ(polygons);
   };
 
   // Prevent page scroll when mouse is over canvas
@@ -122,7 +126,8 @@ export default function MapEditor() {
         wallThickness={wallThickness}
         zoom={zoom}
         hasClosedPolygons={hasClosedPolygons}
-        onExport={handleExport}
+        onExportWalls={handleExportWalls}
+        onExportFloor={handleExportFloor}
         onWallHeightChange={setWallHeight}
         onWallThicknessChange={setWallThickness}
       />

@@ -3,7 +3,8 @@ interface RightPanelProps {
   wallThickness: number;
   zoom: number;
   hasClosedPolygons: boolean;
-  onExport: () => void;
+  onExportWalls: () => void;
+  onExportFloor: () => void;
   onWallHeightChange: (height: number) => void;
   onWallThicknessChange: (thickness: number) => void;
 }
@@ -13,7 +14,8 @@ export function RightPanel({
   wallThickness,
   zoom,
   hasClosedPolygons,
-  onExport,
+  onExportWalls,
+  onExportFloor,
   onWallHeightChange,
   onWallThicknessChange,
 }: RightPanelProps) {
@@ -22,18 +24,26 @@ export function RightPanel({
       <div className="export-section">
         <button
           className="tool-button export-button"
-          onClick={onExport}
+          onClick={onExportWalls}
           disabled={hasClosedPolygons}
           title={hasClosedPolygons 
             ? "Cannot export: there are closed polygons. Keep the polygon open or remove the last point."
-            : "Export map to OBJ 3D format"
+            : "Export walls to OBJ 3D format"
           }
         >
-          📦 Export OBJ
+          📦 Export Walls
+        </button>
+        <button
+          className="tool-button export-button"
+          onClick={onExportFloor}
+          title="Export floor mesh to OBJ 3D format"
+          style={{ marginTop: '10px' }}
+        >
+          🏢 Export Floor
         </button>
         {hasClosedPolygons && (
           <div className="tool-hint" style={{ color: '#ff6b6b', marginTop: '10px' }}>
-            ⚠️ Closed polygons cannot be exported. Keep walls open.
+            ⚠️ Closed polygons cannot be exported as walls. Keep walls open.
           </div>
         )}
         <div className="wall-parameters">
@@ -71,4 +81,5 @@ export function RightPanel({
     </div>
   );
 }
+
 

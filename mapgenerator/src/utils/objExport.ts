@@ -322,3 +322,132 @@ export function exportToOBJ(
   URL.revokeObjectURL(url);
 }
 
+export function exportFloorToOBJ(polygons: WallPolygon[]): void {
+  if (polygons.length === 0) {
+    alert('No hay polígonos para exportar');
+    return;
+  }
+
+  // Calcular el centro geométrico de todos los polígonos
+  let minX = Infinity, maxX = -Infinity;
+  let minY = Infinity, maxY = -Infinity;
+  
+  polygons.forEach(polygon => {
+    polygon.points.forEach(point => {
+      minX = Math.min(minX, point.x);
+      maxX = Math.max(maxX, point.x);
+      minY = Math.min(minY, point.y);
+      maxY = Math.max(maxY, point.y);
+    });
+  });
+  
+  const centerX = (minX + maxX) / 2;
+  const centerY = (minY + maxY) / 2;
+
+  // Convertir cada polígono a un polígono cerrado
+  const closedPolygons: polygonClipping.Polygon[] = [];
+  
+  polygons.forEach(polygon => {
+    if (polygon.points.length < 3) return;
+    
+    // Crear un polígono cerrado (unir primero y último punto)
+    const points = [...polygon.points];
+    const firstPoint = points[0];
+    const lastPoint = points[points.length - 1];
+    
+    // Si no está cerrado, cerrar el polígono
+    const isClosed = firstPoint.x === lastPoint.x && firstPoint.y === lastPoint.y;
+    if (!isClosed) {
+      points.push({ ...firstPoint });
+    }
+    
+    // Convertir a formato polygon-clipping
+    const ring: [number, number][] = points.map(p => [p.x, p.y]);
+    closedPolygons.push([ring]);
+  });
+
+  // Hacer unión booleana de todos los polígonos
+  let unionResult: polygonClipping.MultiPolygon = closedPolygons.slice(0, 1);
+  for (let i = 1; i < closedPolygons.length; i++) {
+    unionResult = polygonClipping.union(unionResult, closedPolygons[i]);
+  }
+
+  // Generar geometría 3D
+  const vertices: number[] = [];
+  const faces: number[] = [];
+  let vertexOffset = 0;
+
+  const addVertex = (x: number, y: number, z: number): number => {
+    vertices.push(x - centerX, y, z - centerY);
+    return vertexOffset++;
+  };
+
+  const addFace = (a: number, b: number, c: number) => {
+    faces.push(a + 1, b + 1, c + 1);
+  };
+
+  // Procesar cada polígono del resultado de unión
+  unionResult.forEach(polygon => {
+    const exteriorRing = polygon[0];
+    const holes = polygon.slice(1);
+
+    // Preparar datos para earcut
+    const flatCoords: number[] = [];
+    const holeIndices: number[] = [];
+    
+    // Agregar contorno exterior
+    for (let i = 0; i < exteriorRing.length - 1; i++) {
+      flatCoords.push(exteriorRing[i][0], exteriorRing[i][1]);
+    }
+    
+    // Agregar huecos
+    for (const hole of holes) {
+      holeIndices.push(flatCoords.length / 2);
+      for (let i = 0; i < hole.length - 1; i++) {
+        flatCoords.push(hole[i][0], hole[i][1]);
+      }
+    }
+    
+    // Triangular con earcut
+    const triangleIndices = earcut(flatCoords, holeIndices, 2);
+    
+    // Crear vértices 3D para el suelo (y = 0)
+    const floorVertices: number[] = [];
+    for (let i = 0; i < flatCoords.length; i += 2) {
+      floorVertices.push(addVertex(flatCoords[i], 0, flatCoords[i + 1]));
+    }
+    
+    // Crear triángulos del suelo (normal hacia arriba: +Y)
+    for (let i = 0; i < triangleIndices.length; i += 3) {
+      const v0 = floorVertices[triangleIndices[i]];
+      const v1 = floorVertices[triangleIndices[i + 1]];
+      const v2 = floorVertices[triangleIndices[i + 2]];
+      addFace(v0, v2, v1);
+    }
+  });
+
+  // Generar archivo OBJ
+  let objContent = '# Floor exported from Facility Generator\n';
+  objContent += `# Polygons: ${polygons.length}\n\n`;
+
+  for (let i = 0; i < vertices.length; i += 3) {
+    objContent += `v ${vertices[i]} ${vertices[i + 1]} ${vertices[i + 2]}\n`;
+  }
+
+  objContent += '\n';
+
+  for (let i = 0; i < faces.length; i += 3) {
+    objContent += `f ${faces[i]} ${faces[i + 1]} ${faces[i + 2]}\n`;
+  }
+
+  const blob = new Blob([objContent], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'floor.obj';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
