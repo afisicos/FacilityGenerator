@@ -14,6 +14,7 @@ export default function MapEditor() {
   const state = useMapState();
   const {
     polygons,
+    setPolygons,
     selectedPolygonId,
     selectedPointIndex,
     selectedPoints,
@@ -35,6 +36,10 @@ export default function MapEditor() {
     setWallHeight,
     wallThickness,
     setWallThickness,
+    visiblePolygons,
+    setVisiblePolygons,
+    exportTogether,
+    setExportTogether,
     hasClosedPolygons,
     setSelectedPolygonId,
     setSelectedPointIndex,
@@ -97,12 +102,51 @@ export default function MapEditor() {
 
   // Export handlers
   const handleExportWalls = () => {
-    exportToOBJ(polygons, wallHeight, wallThickness);
+    // Filter only visible polygons
+    const visiblePolygonsList = polygons.filter(p => visiblePolygons.has(p.id));
+    exportToOBJ(visiblePolygonsList, wallHeight, wallThickness, exportTogether);
   };
 
   const handleExportFloor = () => {
-    exportFloorToOBJ(polygons);
+    // Filter only visible polygons
+    const visiblePolygonsList = polygons.filter(p => visiblePolygons.has(p.id));
+    exportFloorToOBJ(visiblePolygonsList, exportTogether);
   };
+
+  // Rename polygon handler
+  const handleRenamePolygon = (id: string, name: string) => {
+    setPolygons(prev => prev.map(polygon => 
+      polygon.id === id ? { ...polygon, name } : polygon
+    ));
+  };
+
+  // Auto-add new polygons to visible set (only on polygon count change)
+  useEffect(() => {
+    const currentIds = new Set(polygons.map(p => p.id));
+    const newVisible = new Set(visiblePolygons);
+    let changed = false;
+    
+    // Add new polygons
+    polygons.forEach(polygon => {
+      if (!newVisible.has(polygon.id)) {
+        newVisible.add(polygon.id);
+        changed = true;
+      }
+    });
+    
+    // Remove deleted polygons
+    Array.from(newVisible).forEach(id => {
+      if (!currentIds.has(id)) {
+        newVisible.delete(id);
+        changed = true;
+      }
+    });
+    
+    if (changed) {
+      setVisiblePolygons(newVisible);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [polygons.length]); // Only run when polygon count changes
 
   // Prevent page scroll when mouse is over canvas
   useEffect(() => {
@@ -142,15 +186,30 @@ export default function MapEditor() {
         wallThickness={wallThickness}
         zoom={zoom}
         hasClosedPolygons={hasClosedPolygons}
+        polygons={polygons}
+        visiblePolygons={visiblePolygons}
+        exportTogether={exportTogether}
         onExportWalls={handleExportWalls}
         onExportFloor={handleExportFloor}
         onWallHeightChange={setWallHeight}
         onWallThicknessChange={setWallThickness}
+        onTogglePolygonVisibility={(id) => {
+          const newVisible = new Set(visiblePolygons);
+          if (newVisible.has(id)) {
+            newVisible.delete(id);
+          } else {
+            newVisible.add(id);
+          }
+          setVisiblePolygons(newVisible);
+        }}
+        onToggleExportTogether={() => setExportTogether(!exportTogether)}
+        onRenamePolygon={handleRenamePolygon}
       />
       
       <Canvas
         canvasRef={canvasRef}
         polygons={polygons}
+        visiblePolygons={visiblePolygons}
         selectedPolygonId={selectedPolygonId}
         selectedPointIndex={selectedPointIndex}
         selectedPoints={selectedPoints}

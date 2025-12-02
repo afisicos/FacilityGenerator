@@ -23,6 +23,8 @@ export function useMapState() {
   const [panStart, setPanStart] = useState<Point | null>(null);
   const [wallHeight, setWallHeight] = useState(25);
   const [wallThickness, setWallThickness] = useState(0.5);
+  const [visiblePolygons, setVisiblePolygons] = useState<Set<string>>(new Set());
+  const [exportTogether, setExportTogether] = useState(true);
 
   // Detectar si hay polígonos cerrados (sin aberturas)
   const hasClosedPolygons = useMemo(() => {
@@ -81,6 +83,10 @@ export function useMapState() {
     setWallHeight,
     wallThickness,
     setWallThickness,
+    visiblePolygons,
+    setVisiblePolygons,
+    exportTogether,
+    setExportTogether,
     hasClosedPolygons,
   };
 }

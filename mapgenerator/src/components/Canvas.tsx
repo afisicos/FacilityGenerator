@@ -3,6 +3,7 @@ import type { WallPolygon, Point } from '../types';
 interface CanvasProps {
   canvasRef: React.RefObject<HTMLDivElement | null>;
   polygons: WallPolygon[];
+  visiblePolygons: Set<string>;
   selectedPolygonId: string | null;
   selectedPointIndex: number | null;
   selectedPoints: { polygonId: string; pointIndex: number }[];
@@ -27,6 +28,7 @@ interface CanvasProps {
 export function Canvas({
   canvasRef,
   polygons,
+  visiblePolygons,
   selectedPolygonId,
   selectedPointIndex,
   selectedPoints,
@@ -70,7 +72,7 @@ export function Canvas({
         <div className="grid" />
       
         {/* Wall Polygons */}
-        {polygons.map(polygon => (
+        {polygons.filter(p => visiblePolygons.has(p.id)).map(polygon => (
           <svg
             key={polygon.id}
             className={`wall-polygon ${polygon.id === selectedPolygonId ? 'selected' : ''}`}
