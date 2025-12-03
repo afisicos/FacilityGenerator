@@ -12,6 +12,7 @@ interface LeftPanelProps {
   onDrawWall: () => void;
   onFinishPolygon: () => void;
   onDeletePoints: () => void;
+  onDisconnectPoints: () => void;
   onAddPointsToWall: () => void;
   onFinishAddingPoints: () => void;
 }
@@ -28,6 +29,7 @@ export function LeftPanel({
   onDrawWall,
   onFinishPolygon,
   onDeletePoints,
+  onDisconnectPoints,
   onAddPointsToWall,
   onFinishAddingPoints,
 }: LeftPanelProps) {
@@ -86,6 +88,35 @@ export function LeftPanel({
   };
 
   const hasSelectedEndpoint = getSelectedEndpoint() !== null;
+
+  // Verificar si hay exactamente 2 puntos adyacentes del mismo trazado seleccionados
+  // y que ninguno sea extremo del trazado
+  const canDisconnectPoints = () => {
+    if (selectedPoints.length !== 2) return false;
+
+    const polygonId1 = selectedPoints[0].polygonId;
+    const polygonId2 = selectedPoints[1].polygonId;
+
+    // Ambos puntos deben ser del mismo trazado
+    if (polygonId1 !== polygonId2) return false;
+
+    const polygon = polygons.find(p => p.id === polygonId1);
+    if (!polygon) return false;
+
+    const indices = [selectedPoints[0].pointIndex, selectedPoints[1].pointIndex].sort((a, b) => a - b);
+    const [idx1, idx2] = indices;
+
+    // Deben ser adyacentes (diferencia de 1 en índices)
+    if (idx2 - idx1 !== 1) return false;
+
+    // Ninguno debe ser extremo del trazado
+    const isEndpoint1 = idx1 === 0 || idx1 === polygon.points.length - 1;
+    const isEndpoint2 = idx2 === 0 || idx2 === polygon.points.length - 1;
+
+    return !isEndpoint1 && !isEndpoint2;
+  };
+
+  const hasTwoPointsSelected = canDisconnectPoints();
 
   return (
     <div className="side-panel left-panel">
@@ -159,11 +190,20 @@ export function LeftPanel({
           <button
             className="tool-button delete-button"
             onClick={onDeletePoints}
-            title={selectedPoints.length > 0 
-              ? `Delete ${selectedPoints.length} selected point(s)` 
+            title={selectedPoints.length > 0
+              ? `Delete ${selectedPoints.length} selected point(s)`
               : "Delete selected point"}
           >
             🗑️ Delete Point{selectedPoints.length > 1 ? 's' : ''}
+          </button>
+        )}
+        {hasTwoPointsSelected && (
+          <button
+            className="tool-button"
+            onClick={onDisconnectPoints}
+            title="Disconnect two adjacent points (neither being endpoints) to split the wall segment"
+          >
+            🔌 Disconnect Points
           </button>
         )}
         {hasSelectedEndpoint && (

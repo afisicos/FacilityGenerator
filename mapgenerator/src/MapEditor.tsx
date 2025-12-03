@@ -59,6 +59,7 @@ export default function MapEditor() {
     handleAddPointsToWall,
     handleFinishAddingPoints,
     handleDeletePoints,
+    handleDisconnectPoints,
   } = useMapHandlers(state, canvasRef);
 
   // Handle point mouse down
@@ -179,6 +180,7 @@ export default function MapEditor() {
         onDrawWall={handleDrawWall}
         onFinishPolygon={finishPolygon}
         onDeletePoints={handleDeletePoints}
+        onDisconnectPoints={handleDisconnectPoints}
         onAddPointsToWall={handleAddPointsToWall}
         onFinishAddingPoints={handleFinishAddingPoints}
       />

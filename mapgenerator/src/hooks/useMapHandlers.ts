@@ -41,6 +41,8 @@ interface MapState {
   setIsAddingToPolygon: React.Dispatch<React.SetStateAction<boolean>>;
   addToStart: boolean;
   setAddToStart: React.Dispatch<React.SetStateAction<boolean>>;
+  visiblePolygons: Set<string>;
+  setVisiblePolygons: React.Dispatch<React.SetStateAction<Set<string>>>;
 }
 
 export function useMapHandlers(state: MapState, canvasRef: React.RefObject<HTMLDivElement | null>) {
@@ -82,6 +84,7 @@ export function useMapHandlers(state: MapState, canvasRef: React.RefObject<HTMLD
     setIsAddingToPolygon,
     addToStart,
     setAddToStart,
+    setVisiblePolygons,
   } = state;
 
   const finishPolygon = useCallback(() => {
@@ -488,40 +491,121 @@ export function useMapHandlers(state: MapState, canvasRef: React.RefObject<HTMLD
     setTool,
   ]);
 
+  const handleDisconnectPoints = useCallback(() => {
+    if (selectedPoints.length !== 2) return;
+
+    // Verificar que los dos puntos son del mismo trazado
+    const polygonId1 = selectedPoints[0].polygonId;
+    const polygonId2 = selectedPoints[1].polygonId;
+
+    if (polygonId1 !== polygonId2) return;
+
+    const polygon = polygons.find(p => p.id === polygonId1);
+    if (!polygon) return;
+
+    // Obtener los índices de los puntos y ordenarlos
+    const indices = [selectedPoints[0].pointIndex, selectedPoints[1].pointIndex].sort((a, b) => a - b);
+    const [startIdx, endIdx] = indices;
+
+    // Verificar que son adyacentes
+    if (endIdx - startIdx !== 1) return;
+
+    // Verificar que ninguno es extremo del trazado
+    const isEndpoint1 = startIdx === 0 || startIdx === polygon.points.length - 1;
+    const isEndpoint2 = endIdx === 0 || endIdx === polygon.points.length - 1;
+
+    if (isEndpoint1 || isEndpoint2) return;
+
+    // Dividir el trazado en dos partes: antes del primer punto y después del segundo punto
+    const firstPart = polygon.points.slice(0, startIdx + 1);
+    const secondPart = polygon.points.slice(endIdx);
+
+    const timestamp = Date.now();
+    const newPolygonIds: string[] = [];
+
+    setPolygons(prev => {
+      const newPolygons = prev.filter(p => p.id !== polygonId1);
+
+      // Agregar primera parte si tiene al menos 1 punto (incluso puntos sueltos)
+      if (firstPart.length >= 1) {
+        const newId = `polygon-${timestamp}-1`;
+        newPolygons.push({
+          id: newId,
+          name: polygon.name,
+          points: firstPart
+        });
+        newPolygonIds.push(newId);
+      }
+
+      // Agregar segunda parte si tiene al menos 1 punto
+      if (secondPart.length >= 1) {
+        const newId = `polygon-${timestamp}-2`;
+        newPolygons.push({
+          id: newId,
+          name: polygon.name,
+          points: secondPart
+        });
+        newPolygonIds.push(newId);
+      }
+
+      return newPolygons;
+    });
+
+    // Agregar los nuevos polígonos al conjunto visible
+    setVisiblePolygons(prev => {
+      const newVisible = new Set(prev);
+      newPolygonIds.forEach(id => newVisible.add(id));
+      return newVisible;
+    });
+
+    // Limpiar selección
+    setSelectedPoints([]);
+    setSelectedPolygonId(null);
+    setSelectedPointIndex(null);
+  }, [
+    selectedPoints,
+    polygons,
+    setPolygons,
+    setSelectedPoints,
+    setSelectedPolygonId,
+    setSelectedPointIndex,
+    setVisiblePolygons,
+  ]);
+
   const handleDeletePoints = useCallback(() => {
     if (selectedPoints.length > 0) {
       setPolygons(prev => prev.map(polygon => {
         const pointsToDelete = selectedPoints
           .filter(sp => sp.polygonId === polygon.id)
           .map(sp => sp.pointIndex);
-        
+
         if (pointsToDelete.length === 0) return polygon;
-        
+
         const newPoints = polygon.points.filter((_, idx) => !pointsToDelete.includes(idx));
-        
+
         if (newPoints.length < 2) return null;
-        
+
         return {
           ...polygon,
           points: newPoints
         };
       }).filter(Boolean) as WallPolygon[]);
-      
+
       setSelectedPoints([]);
     } else if (selectedPolygonId !== null && selectedPointIndex !== null) {
       setPolygons(prev => prev.map(polygon => {
         if (polygon.id !== selectedPolygonId) return polygon;
-        
+
         const newPoints = polygon.points.filter((_, idx) => idx !== selectedPointIndex);
-        
+
         if (newPoints.length < 2) return null;
-        
+
         return {
           ...polygon,
           points: newPoints
         };
       }).filter(Boolean) as WallPolygon[]);
-      
+
       setSelectedPolygonId(null);
       setSelectedPointIndex(null);
     }
@@ -545,6 +629,7 @@ export function useMapHandlers(state: MapState, canvasRef: React.RefObject<HTMLD
     handleAddPointsToWall,
     handleFinishAddingPoints,
     handleDeletePoints,
+    handleDisconnectPoints,
   };
 }
 

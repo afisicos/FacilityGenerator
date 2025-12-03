@@ -316,6 +316,56 @@ export function exportToOBJ(
     }
   });
 
+  // Generar coordenadas UV para cada vértice (1 unidad UV = 1 unidad 3D)
+  const uvs: number[] = [];
+
+  // Función para determinar el tipo de cara basado en sus vértices
+  const getFaceType = (faceIndex: number): 'horizontal' | 'vertical' => {
+    const v1 = faces[faceIndex] - 1;
+    const v2 = faces[faceIndex + 1] - 1;
+    const v3 = faces[faceIndex + 2] - 1;
+
+    const y1 = vertices[v1 * 3 + 1];
+    const y2 = vertices[v2 * 3 + 1];
+    const y3 = vertices[v3 * 3 + 1];
+
+    // Si todos los vértices tienen la misma coordenada Y, es una cara horizontal
+    if (Math.abs(y1 - y2) < 0.001 && Math.abs(y1 - y3) < 0.001) {
+      return 'horizontal';
+    }
+    return 'vertical';
+  };
+
+  // Para cada vértice, calcular UVs basados en su posición 3D y el tipo de cara
+  for (let i = 0; i < vertices.length; i += 3) {
+    const x = vertices[i];
+    const y = vertices[i + 1];
+    const z = vertices[i + 2];
+
+    // Encontrar qué cara usa este vértice para determinar el tipo
+    let faceType: 'horizontal' | 'vertical' = 'horizontal'; // default
+
+    // Buscar en todas las caras cuál usa este vértice
+    for (let faceIdx = 0; faceIdx < faces.length; faceIdx += 3) {
+      const v1 = faces[faceIdx] - 1;
+      const v2 = faces[faceIdx + 1] - 1;
+      const v3 = faces[faceIdx + 2] - 1;
+
+      if (v1 === i/3 || v2 === i/3 || v3 === i/3) {
+        faceType = getFaceType(faceIdx);
+        break;
+      }
+    }
+
+    if (faceType === 'horizontal') {
+      // Para caras horizontales (suelo/techo): usar coordenadas X y Z
+      uvs.push(x, z);
+    } else {
+      // Para caras verticales (paredes): usar coordenadas X y Y para proyección perpendicular
+      uvs.push(x, y);
+    }
+  }
+
   // Generar archivo OBJ
   let objContent = '# Map exported from Facility Generator\n';
   objContent += `# Polygons: ${polygons.length}\n\n`;
@@ -326,8 +376,18 @@ export function exportToOBJ(
 
   objContent += '\n';
 
+  for (let i = 0; i < uvs.length; i += 2) {
+    objContent += `vt ${uvs[i]} ${uvs[i + 1]}\n`;
+  }
+
+  objContent += '\n';
+
+  // Generar caras con referencias UV
   for (let i = 0; i < faces.length; i += 3) {
-    objContent += `f ${faces[i]} ${faces[i + 1]} ${faces[i + 2]}\n`;
+    const v1 = faces[i];
+    const v2 = faces[i + 1];
+    const v3 = faces[i + 2];
+    objContent += `f ${v1}/${v1} ${v2}/${v2} ${v3}/${v3}\n`;
   }
 
   const blob = new Blob([objContent], { type: 'text/plain' });
@@ -613,6 +673,56 @@ function exportWallsSeparately(
       }
     });
 
+    // Generar coordenadas UV para cada vértice (1 unidad UV = 1 unidad 3D)
+    const uvs: number[] = [];
+
+    // Función para determinar el tipo de cara basado en sus vértices
+    const getFaceType = (faceIndex: number): 'horizontal' | 'vertical' => {
+      const v1 = faces[faceIndex] - 1;
+      const v2 = faces[faceIndex + 1] - 1;
+      const v3 = faces[faceIndex + 2] - 1;
+
+      const y1 = vertices[v1 * 3 + 1];
+      const y2 = vertices[v2 * 3 + 1];
+      const y3 = vertices[v3 * 3 + 1];
+
+      // Si todos los vértices tienen la misma coordenada Y, es una cara horizontal
+      if (Math.abs(y1 - y2) < 0.001 && Math.abs(y1 - y3) < 0.001) {
+        return 'horizontal';
+      }
+      return 'vertical';
+    };
+
+  // Para cada vértice, calcular UVs basados en su posición 3D y el tipo de cara
+  for (let i = 0; i < vertices.length; i += 3) {
+    const x = vertices[i];
+    const y = vertices[i + 1];
+    const z = vertices[i + 2];
+
+    // Encontrar qué cara usa este vértice para determinar el tipo
+    let faceType: 'horizontal' | 'vertical' = 'horizontal'; // default
+
+    // Buscar en todas las caras cuál usa este vértice
+    for (let faceIdx = 0; faceIdx < faces.length; faceIdx += 3) {
+      const v1 = faces[faceIdx] - 1;
+      const v2 = faces[faceIdx + 1] - 1;
+      const v3 = faces[faceIdx + 2] - 1;
+
+      if (v1 === i/3 || v2 === i/3 || v3 === i/3) {
+        faceType = getFaceType(faceIdx);
+        break;
+      }
+    }
+
+    if (faceType === 'horizontal') {
+      // Para caras horizontales (suelo/techo): usar coordenadas X y Z
+      uvs.push(x, z);
+    } else {
+      // Para caras verticales (paredes): usar coordenadas X y Y para proyección perpendicular
+      uvs.push(x, y);
+    }
+  }
+
     let objContent = '# Wall exported from Facility Generator\n';
     objContent += `# Polygon ID: ${polygon.id}\n\n`;
 
@@ -622,8 +732,18 @@ function exportWallsSeparately(
 
     objContent += '\n';
 
+    for (let i = 0; i < uvs.length; i += 2) {
+      objContent += `vt ${uvs[i]} ${uvs[i + 1]}\n`;
+    }
+
+    objContent += '\n';
+
+    // Generar caras con referencias UV
     for (let i = 0; i < faces.length; i += 3) {
-      objContent += `f ${faces[i]} ${faces[i + 1]} ${faces[i + 2]}\n`;
+      const v1 = faces[i];
+      const v2 = faces[i + 1];
+      const v3 = faces[i + 2];
+      objContent += `f ${v1}/${v1} ${v2}/${v2} ${v3}/${v3}\n`;
     }
 
     const blob = new Blob([objContent], { type: 'text/plain' });
