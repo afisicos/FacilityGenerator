@@ -319,31 +319,61 @@ export function exportToOBJ(
   // Generar coordenadas UV para cada vértice (1 unidad UV = 1 unidad 3D)
   const uvs: number[] = [];
 
-  // Función para determinar el tipo de cara basado en sus vértices
-  const getFaceType = (faceIndex: number): 'horizontal' | 'vertical' => {
+  // Función para calcular la normal de una cara y determinar su orientación
+  const getFaceOrientation = (faceIndex: number): 'east' | 'west' | 'north' | 'south' | 'up' | 'down' | 'unknown' => {
     const v1 = faces[faceIndex] - 1;
     const v2 = faces[faceIndex + 1] - 1;
     const v3 = faces[faceIndex + 2] - 1;
 
-    const y1 = vertices[v1 * 3 + 1];
-    const y2 = vertices[v2 * 3 + 1];
-    const y3 = vertices[v3 * 3 + 1];
+    const p1 = [vertices[v1 * 3], vertices[v1 * 3 + 1], vertices[v1 * 3 + 2]];
+    const p2 = [vertices[v2 * 3], vertices[v2 * 3 + 1], vertices[v2 * 3 + 2]];
+    const p3 = [vertices[v3 * 3], vertices[v3 * 3 + 1], vertices[v3 * 3 + 2]];
 
-    // Si todos los vértices tienen la misma coordenada Y, es una cara horizontal
-    if (Math.abs(y1 - y2) < 0.001 && Math.abs(y1 - y3) < 0.001) {
-      return 'horizontal';
+    // Calcular vectores del triángulo
+    const v12 = [p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2]];
+    const v13 = [p3[0] - p1[0], p3[1] - p1[1], p3[2] - p1[2]];
+
+    // Calcular normal con producto cruzado
+    const normal = [
+      v12[1] * v13[2] - v12[2] * v13[1],
+      v12[2] * v13[0] - v12[0] * v13[2],
+      v12[0] * v13[1] - v12[1] * v13[0]
+    ];
+
+    // Normalizar la normal
+    const length = Math.sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
+    if (length === 0) return 'unknown';
+
+    normal[0] /= length;
+    normal[1] /= length;
+    normal[2] /= length;
+
+    // Determinar la dirección principal de la normal
+    const absX = Math.abs(normal[0]);
+    const absY = Math.abs(normal[1]);
+    const absZ = Math.abs(normal[2]);
+
+    const maxComponent = Math.max(absX, absY, absZ);
+
+    if (maxComponent === absX) {
+      return normal[0] > 0 ? 'east' : 'west';
+    } else if (maxComponent === absY) {
+      return normal[1] > 0 ? 'up' : 'down';
+    } else if (maxComponent === absZ) {
+      return normal[2] > 0 ? 'north' : 'south';
     }
-    return 'vertical';
+
+    return 'unknown';
   };
 
-  // Para cada vértice, calcular UVs basados en su posición 3D y el tipo de cara
+  // Para cada vértice, calcular UVs basados en la orientación de la cara que lo usa
   for (let i = 0; i < vertices.length; i += 3) {
     const x = vertices[i];
     const y = vertices[i + 1];
     const z = vertices[i + 2];
 
-    // Encontrar qué cara usa este vértice para determinar el tipo
-    let faceType: 'horizontal' | 'vertical' = 'horizontal'; // default
+    // Encontrar qué cara usa este vértice para determinar su orientación
+    let orientation: 'east' | 'west' | 'north' | 'south' | 'up' | 'down' | 'unknown' = 'unknown';
 
     // Buscar en todas las caras cuál usa este vértice
     for (let faceIdx = 0; faceIdx < faces.length; faceIdx += 3) {
@@ -352,17 +382,29 @@ export function exportToOBJ(
       const v3 = faces[faceIdx + 2] - 1;
 
       if (v1 === i/3 || v2 === i/3 || v3 === i/3) {
-        faceType = getFaceType(faceIdx);
+        orientation = getFaceOrientation(faceIdx);
         break;
       }
     }
 
-    if (faceType === 'horizontal') {
-      // Para caras horizontales (suelo/techo): usar coordenadas X y Z
-      uvs.push(x, z);
-    } else {
-      // Para caras verticales (paredes): usar coordenadas X y Y para proyección perpendicular
-      uvs.push(x, y);
+    // Calcular UVs basadas en la orientación de la cara
+    switch (orientation) {
+      case 'east':
+      case 'west':
+        // Caras que miran este/oeste: proyectar en plano YZ, pero con orden corregido para evitar rotación
+        uvs.push(z, y);
+        break;
+      case 'north':
+      case 'south':
+        // Caras que miran norte/sur: proyectar en plano XY
+        uvs.push(x, y);
+        break;
+      case 'up':
+      case 'down':
+      default:
+        // Caras horizontales (arriba/abajo) o desconocidas: proyectar en plano XZ
+        uvs.push(x, z);
+        break;
     }
   }
 
@@ -676,31 +718,61 @@ function exportWallsSeparately(
     // Generar coordenadas UV para cada vértice (1 unidad UV = 1 unidad 3D)
     const uvs: number[] = [];
 
-    // Función para determinar el tipo de cara basado en sus vértices
-    const getFaceType = (faceIndex: number): 'horizontal' | 'vertical' => {
+    // Función para calcular la normal de una cara y determinar su orientación
+    const getFaceOrientation = (faceIndex: number): 'east' | 'west' | 'north' | 'south' | 'up' | 'down' | 'unknown' => {
       const v1 = faces[faceIndex] - 1;
       const v2 = faces[faceIndex + 1] - 1;
       const v3 = faces[faceIndex + 2] - 1;
 
-      const y1 = vertices[v1 * 3 + 1];
-      const y2 = vertices[v2 * 3 + 1];
-      const y3 = vertices[v3 * 3 + 1];
+      const p1 = [vertices[v1 * 3], vertices[v1 * 3 + 1], vertices[v1 * 3 + 2]];
+      const p2 = [vertices[v2 * 3], vertices[v2 * 3 + 1], vertices[v2 * 3 + 2]];
+      const p3 = [vertices[v3 * 3], vertices[v3 * 3 + 1], vertices[v3 * 3 + 2]];
 
-      // Si todos los vértices tienen la misma coordenada Y, es una cara horizontal
-      if (Math.abs(y1 - y2) < 0.001 && Math.abs(y1 - y3) < 0.001) {
-        return 'horizontal';
+      // Calcular vectores del triángulo
+      const v12 = [p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2]];
+      const v13 = [p3[0] - p1[0], p3[1] - p1[1], p3[2] - p1[2]];
+
+      // Calcular normal con producto cruzado
+      const normal = [
+        v12[1] * v13[2] - v12[2] * v13[1],
+        v12[2] * v13[0] - v12[0] * v13[2],
+        v12[0] * v13[1] - v12[1] * v13[0]
+      ];
+
+      // Normalizar la normal
+      const length = Math.sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
+      if (length === 0) return 'unknown';
+
+      normal[0] /= length;
+      normal[1] /= length;
+      normal[2] /= length;
+
+      // Determinar la dirección principal de la normal
+      const absX = Math.abs(normal[0]);
+      const absY = Math.abs(normal[1]);
+      const absZ = Math.abs(normal[2]);
+
+      const maxComponent = Math.max(absX, absY, absZ);
+
+      if (maxComponent === absX) {
+        return normal[0] > 0 ? 'east' : 'west';
+      } else if (maxComponent === absY) {
+        return normal[1] > 0 ? 'up' : 'down';
+      } else if (maxComponent === absZ) {
+        return normal[2] > 0 ? 'north' : 'south';
       }
-      return 'vertical';
+
+      return 'unknown';
     };
 
-  // Para cada vértice, calcular UVs basados en su posición 3D y el tipo de cara
+  // Para cada vértice, calcular UVs basados en la orientación de la cara que lo usa
   for (let i = 0; i < vertices.length; i += 3) {
     const x = vertices[i];
     const y = vertices[i + 1];
     const z = vertices[i + 2];
 
-    // Encontrar qué cara usa este vértice para determinar el tipo
-    let faceType: 'horizontal' | 'vertical' = 'horizontal'; // default
+    // Encontrar qué cara usa este vértice para determinar su orientación
+    let orientation: 'east' | 'west' | 'north' | 'south' | 'up' | 'down' | 'unknown' = 'unknown';
 
     // Buscar en todas las caras cuál usa este vértice
     for (let faceIdx = 0; faceIdx < faces.length; faceIdx += 3) {
@@ -709,17 +781,29 @@ function exportWallsSeparately(
       const v3 = faces[faceIdx + 2] - 1;
 
       if (v1 === i/3 || v2 === i/3 || v3 === i/3) {
-        faceType = getFaceType(faceIdx);
+        orientation = getFaceOrientation(faceIdx);
         break;
       }
     }
 
-    if (faceType === 'horizontal') {
-      // Para caras horizontales (suelo/techo): usar coordenadas X y Z
-      uvs.push(x, z);
-    } else {
-      // Para caras verticales (paredes): usar coordenadas X y Y para proyección perpendicular
-      uvs.push(x, y);
+    // Calcular UVs basadas en la orientación de la cara
+    switch (orientation) {
+      case 'east':
+      case 'west':
+        // Caras que miran este/oeste: proyectar en plano YZ, pero con orden corregido para evitar rotación
+        uvs.push(z, y);
+        break;
+      case 'north':
+      case 'south':
+        // Caras que miran norte/sur: proyectar en plano XY
+        uvs.push(x, y);
+        break;
+      case 'up':
+      case 'down':
+      default:
+        // Caras horizontales (arriba/abajo) o desconocidas: proyectar en plano XZ
+        uvs.push(x, z);
+        break;
     }
   }
 
@@ -905,6 +989,14 @@ function exportFloorsTogether(polygons: WallPolygon[], withVolume: boolean = fal
     }
   });
 
+  // Generate UV coordinates for planar mapping (floor)
+  const uvs: number[] = [];
+  for (let i = 0; i < vertices.length; i += 3) {
+    const x = vertices[i];
+    const y = vertices[i + 2]; // Use Y coordinate (depth) for V, X for U
+    uvs.push(x, y);
+  }
+
   // Generate OBJ file
   let objContent = '# Floors exported together from Facility Generator\n';
   objContent += `# Polygons: ${polygons.length}\n\n`;
@@ -915,8 +1007,17 @@ function exportFloorsTogether(polygons: WallPolygon[], withVolume: boolean = fal
 
   objContent += '\n';
 
+  for (let i = 0; i < uvs.length; i += 2) {
+    objContent += `vt ${uvs[i]} ${uvs[i + 1]}\n`;
+  }
+
+  objContent += '\n';
+
   for (let i = 0; i < faces.length; i += 3) {
-    objContent += `f ${faces[i]} ${faces[i + 1]} ${faces[i + 2]}\n`;
+    const v1 = faces[i];
+    const v2 = faces[i + 1];
+    const v3 = faces[i + 2];
+    objContent += `f ${v1}/${v1} ${v2}/${v2} ${v3}/${v3}\n`;
   }
 
   const blob = new Blob([objContent], { type: 'text/plain' });
@@ -1042,6 +1143,14 @@ export function exportFloorToOBJ(polygons: WallPolygon[], exportTogether: boolea
       }
     }
 
+    // Generate UV coordinates for planar mapping (floor)
+    const uvs: number[] = [];
+    for (let i = 0; i < vertices.length; i += 3) {
+      const x = vertices[i];
+      const y = vertices[i + 2]; // Use Y coordinate (depth) for V, X for U
+      uvs.push(x, y);
+    }
+
     // Generar archivo OBJ
     let objContent = `# Floor exported from Facility Generator\n`;
     objContent += `# Polygon ID: ${polygon.id}\n\n`;
@@ -1052,8 +1161,17 @@ export function exportFloorToOBJ(polygons: WallPolygon[], exportTogether: boolea
 
     objContent += '\n';
 
+    for (let i = 0; i < uvs.length; i += 2) {
+      objContent += `vt ${uvs[i]} ${uvs[i + 1]}\n`;
+    }
+
+    objContent += '\n';
+
     for (let i = 0; i < faces.length; i += 3) {
-      objContent += `f ${faces[i]} ${faces[i + 1]} ${faces[i + 2]}\n`;
+      const v1 = faces[i];
+      const v2 = faces[i + 1];
+      const v3 = faces[i + 2];
+      objContent += `f ${v1}/${v1} ${v2}/${v2} ${v3}/${v3}\n`;
     }
 
     // Descargar archivo con nombre basado en el nombre del polígono
