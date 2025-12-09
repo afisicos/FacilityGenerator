@@ -1,5 +1,14 @@
 import type { WallPolygon, Point } from '../types';
 
+// Función helper para convertir color HEX a RGBA con opacidad
+const hexToRgba = (hex: string, alpha: number = 0.1): string => {
+  if (!hex.startsWith('#')) return hex;
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
 interface CanvasProps {
   canvasRef: React.RefObject<HTMLDivElement | null>;
   polygons: WallPolygon[];
@@ -86,6 +95,15 @@ export function Canvas({
               zIndex: polygon.id === selectedPolygonId ? 10 : 5
             }}
           >
+            {/* Polígono cerrado cuando hay 3 o más puntos */}
+            {polygon.points.length >= 3 && (
+              <polygon
+                points={polygon.points.map(p => `${p.x},${p.y}`).join(' ')}
+                fill={polygon.fillColor ? hexToRgba(polygon.fillColor, polygon.id === selectedPolygonId ? 0.2 : 0.1) : (polygon.id === selectedPolygonId ? 'rgba(100, 108, 255, 0.2)' : 'rgba(100, 108, 255, 0.1)')}
+                stroke="none"
+              />
+            )}
+            {/* Líneas del contorno */}
             <polyline
               points={polygon.points.map(p => `${p.x},${p.y}`).join(' ')}
               fill="none"
@@ -146,6 +164,7 @@ export function Canvas({
               zIndex: 8
             }}
           >
+            {/* Líneas del contorno */}
             <polyline
               points={currentPolygonPoints.map(p => `${p.x},${p.y}`).join(' ')}
               fill="none"
@@ -155,6 +174,14 @@ export function Canvas({
               strokeLinecap="round"
               strokeLinejoin="round"
             />
+            {/* Polígono cerrado cuando hay 3 o más puntos */}
+            {currentPolygonPoints.length >= 3 && (
+              <polygon
+                points={currentPolygonPoints.map(p => `${p.x},${p.y}`).join(' ')}
+                fill="rgba(100, 108, 255, 0.1)"
+                stroke="none"
+              />
+            )}
             {previewPoint && currentPolygonPoints.length > 0 && (
               <line
                 x1={currentPolygonPoints[currentPolygonPoints.length - 1].x}

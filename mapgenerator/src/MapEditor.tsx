@@ -46,6 +46,7 @@ export default function MapEditor() {
     setSelectedPolygonId,
     setSelectedPointIndex,
     setSelectedPoints,
+    resetScenario,
   } = state;
 
   // Event handlers
@@ -120,9 +121,23 @@ export default function MapEditor() {
 
   // Rename polygon handler
   const handleRenamePolygon = (id: string, name: string) => {
-    setPolygons(prev => prev.map(polygon => 
+    setPolygons(prev => prev.map(polygon =>
       polygon.id === id ? { ...polygon, name } : polygon
     ));
+  };
+
+  // Change polygon color handler
+  const handleChangePolygonColor = (id: string, color: string) => {
+    setPolygons(prev => prev.map(polygon =>
+      polygon.id === id ? { ...polygon, fillColor: color } : polygon
+    ));
+  };
+
+  // Reset scenario handler
+  const handleResetScenario = () => {
+    if (window.confirm('¿Estás seguro de que quieres reiniciar todo el escenario? Se perderán todos los cambios no guardados.')) {
+      resetScenario();
+    }
   };
 
   // Auto-add new polygons to visible set (only on polygon count change)
@@ -187,6 +202,7 @@ export default function MapEditor() {
         onFinishAddingPoints={handleFinishAddingPoints}
         onSaveScenario={handleSaveScenario}
         onLoadScenario={handleLoadScenario}
+        onResetScenario={handleResetScenario}
       />
       
       <RightPanel
@@ -214,6 +230,7 @@ export default function MapEditor() {
         onToggleExportTogether={() => setExportTogether(!exportTogether)}
         onToggleFloorVolume={() => setFloorWithVolume(!floorWithVolume)}
         onRenamePolygon={handleRenamePolygon}
+        onChangePolygonColor={handleChangePolygonColor}
       />
       
       <Canvas

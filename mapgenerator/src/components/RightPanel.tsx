@@ -18,6 +18,7 @@ interface RightPanelProps {
   onToggleExportTogether: () => void;
   onToggleFloorVolume: () => void;
   onRenamePolygon: (id: string, name: string) => void;
+  onChangePolygonColor: (id: string, color: string) => void;
 }
 
 export function RightPanel({
@@ -37,6 +38,7 @@ export function RightPanel({
   onToggleExportTogether,
   onToggleFloorVolume,
   onRenamePolygon,
+  onChangePolygonColor,
 }: RightPanelProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState<string>('');
@@ -191,9 +193,9 @@ export function RightPanel({
                     }
                   }}
                 >
-                  <div style={{ 
-                    flex: 1, 
-                    display: 'flex', 
+                  <div style={{
+                    flex: 1,
+                    display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
                     minWidth: 0
@@ -234,8 +236,8 @@ export function RightPanel({
                         onClick={(e) => e.stopPropagation()}
                       />
                     ) : (
-                      <span 
-                        style={{ 
+                      <span
+                        style={{
                           fontSize: '13px',
                           fontWeight: 500,
                           color: isVisible ? '#fff' : '#666',
@@ -254,7 +256,7 @@ export function RightPanel({
                         title="Double click to rename"
                       >
                         {displayName}
-                        <span style={{ 
+                        <span style={{
                           fontSize: '11px',
                           marginLeft: '6px',
                           opacity: 0.7,
@@ -264,6 +266,26 @@ export function RightPanel({
                         </span>
                       </span>
                     )}
+                    {/* Color Picker */}
+                    <input
+                      type="color"
+                      value={polygon.fillColor || '#6464ff'}
+                      onChange={(e) => {
+                        const color = e.target.value;
+                        onChangePolygonColor(polygon.id, color);
+                      }}
+                      style={{
+                        width: '24px',
+                        height: '24px',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        background: 'none',
+                        flexShrink: 0
+                      }}
+                      title="Change polygon fill color"
+                      onClick={(e) => e.stopPropagation()}
+                    />
                   </div>
                   <span 
                     style={{ 

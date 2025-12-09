@@ -17,6 +17,7 @@ interface LeftPanelProps {
   onFinishAddingPoints: () => void;
   onSaveScenario: () => void;
   onLoadScenario: (file: File) => void;
+  onResetScenario: () => void;
 }
 
 export function LeftPanel({
@@ -36,6 +37,7 @@ export function LeftPanel({
   onFinishAddingPoints,
   onSaveScenario,
   onLoadScenario,
+  onResetScenario,
 }: LeftPanelProps) {
   // Determinar qué polígono está seleccionado
   const getSelectedPolygonInfo = () => {
@@ -263,6 +265,14 @@ export function LeftPanel({
               style={{ display: 'none' }}
             />
           </label>
+          <button
+            className="tool-button delete-button"
+            onClick={onResetScenario}
+            title="Reset entire scenario (delete all walls and reset state)"
+            style={{ width: '100%', marginTop: '8px' }}
+          >
+            🔄 Reset Scenario
+          </button>
         </div>
       </div>
       {tool === 'drawWall' && (

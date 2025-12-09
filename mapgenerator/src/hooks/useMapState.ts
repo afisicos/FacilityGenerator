@@ -41,6 +41,30 @@ export function useMapState() {
     });
   }, [polygons]);
 
+  // Función para reiniciar completamente el escenario
+  const resetScenario = () => {
+    setPolygons([]);
+    setSelectedPolygonId(null);
+    setSelectedPointIndex(null);
+    setSelectedPoints([]);
+    setIsBoxSelecting(false);
+    setBoxSelectStart(null);
+    setBoxSelectEnd(null);
+    setTool('select');
+    setIsDraggingPoint(false);
+    setDragStart(null);
+    setIsDrawingWall(false);
+    setCurrentPolygonPoints([]);
+    setPreviewPoint(null);
+    setIsAddingToPolygon(false);
+    setAddToStart(false);
+    setZoom(1);
+    setPanOffset({ x: 0, y: 0 });
+    setIsPanning(false);
+    setPanStart(null);
+    setVisiblePolygons(new Set());
+  };
+
   return {
     polygons,
     setPolygons,
@@ -91,6 +115,7 @@ export function useMapState() {
     floorWithVolume,
     setFloorWithVolume,
     hasClosedPolygons,
+    resetScenario,
   };
 }
 
