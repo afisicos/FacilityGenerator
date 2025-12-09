@@ -108,15 +108,29 @@ export default function MapEditor() {
 
   // Export handlers
   const handleExportWalls = () => {
+    // Pedir nombre del escenario al usuario
+    const scenarioName = prompt('Ingresa el nombre del escenario para las paredes:', 'escenario-muros');
+
+    if (!scenarioName || scenarioName.trim() === '') {
+      return; // Cancelar si no se ingresa nombre
+    }
+
     // Filter only visible polygons
     const visiblePolygonsList = polygons.filter(p => visiblePolygons.has(p.id));
-    exportToOBJ(visiblePolygonsList, wallHeight, wallThickness, exportTogether);
+    exportToOBJ(visiblePolygonsList, wallHeight, wallThickness, exportTogether, scenarioName.trim());
   };
 
   const handleExportFloor = () => {
+    // Pedir nombre del escenario al usuario
+    const scenarioName = prompt('Ingresa el nombre del escenario para el piso:', 'escenario-piso');
+
+    if (!scenarioName || scenarioName.trim() === '') {
+      return; // Cancelar si no se ingresa nombre
+    }
+
     // Filter only visible polygons
     const visiblePolygonsList = polygons.filter(p => visiblePolygons.has(p.id));
-    exportFloorToOBJ(visiblePolygonsList, exportTogether, floorWithVolume);
+    exportFloorToOBJ(visiblePolygonsList, exportTogether, floorWithVolume, scenarioName.trim());
   };
 
   // Rename polygon handler
@@ -209,7 +223,6 @@ export default function MapEditor() {
         wallHeight={wallHeight}
         wallThickness={wallThickness}
         zoom={zoom}
-        hasClosedPolygons={hasClosedPolygons}
         polygons={polygons}
         visiblePolygons={visiblePolygons}
         exportTogether={exportTogether}

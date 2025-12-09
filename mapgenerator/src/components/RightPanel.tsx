@@ -5,7 +5,6 @@ interface RightPanelProps {
   wallHeight: number;
   wallThickness: number;
   zoom: number;
-  hasClosedPolygons: boolean;
   polygons: WallPolygon[];
   visiblePolygons: Set<string>;
   exportTogether: boolean;
@@ -25,7 +24,6 @@ export function RightPanel({
   wallHeight,
   wallThickness,
   zoom,
-  hasClosedPolygons,
   polygons,
   visiblePolygons,
   exportTogether,
@@ -59,12 +57,9 @@ export function RightPanel({
         <button
           className="tool-button export-button"
           onClick={onExportWalls}
-          disabled={hasClosedPolygons}
-          title={hasClosedPolygons 
-            ? "Cannot export: there are closed polygons. Keep the polygon open or remove the last point."
-            : exportTogether 
-              ? "Export all walls together to OBJ 3D format"
-              : "Export each wall separately to OBJ 3D format"
+          title={exportTogether
+            ? "Export all walls together to OBJ 3D format"
+            : "Export each wall separately to OBJ 3D format"
           }
         >
           📦 Export Walls
@@ -96,11 +91,6 @@ export function RightPanel({
         >
           🏢 Export Floor
         </button>
-        {hasClosedPolygons && (
-          <div className="tool-hint" style={{ color: '#ff6b6b', marginTop: '10px' }}>
-            ⚠️ Closed polygons cannot be exported as walls. Keep walls open.
-          </div>
-        )}
         <div className="wall-parameters">
           <label className="parameter-label">
             Altura de muros:

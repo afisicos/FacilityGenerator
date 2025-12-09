@@ -9,6 +9,17 @@ const hexToRgba = (hex: string, alpha: number = 0.1): string => {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
+// Función helper para detectar si un punto tiene duplicados en el polígono
+const hasDuplicatePoints = (points: Point[], currentIndex: number): boolean => {
+  const currentPoint = points[currentIndex];
+  for (let i = 0; i < points.length; i++) {
+    if (i !== currentIndex && points[i].x === currentPoint.x && points[i].y === currentPoint.y) {
+      return true;
+    }
+  }
+  return false;
+};
+
 interface CanvasProps {
   canvasRef: React.RefObject<HTMLDivElement | null>;
   polygons: WallPolygon[];
@@ -127,24 +138,39 @@ export function Canvas({
             {polygon.points.map((point, idx) => {
               const isSelected = selectedPoints.some(sp => sp.polygonId === polygon.id && sp.pointIndex === idx);
               const isSingleSelected = polygon.id === selectedPolygonId && idx === selectedPointIndex;
-              
+              const hasDuplicates = hasDuplicatePoints(polygon.points, idx);
+
               return (
-                <circle
-                  key={idx}
-                  cx={point.x}
-                  cy={point.y}
-                  r={isSelected || isSingleSelected ? 8 : 6}
-                  fill={isSelected ? '#ff6b6b' : (isSingleSelected ? '#646cff' : '#646cff')}
-                  stroke="#ffffff"
-                  strokeWidth="2"
-                  style={{ pointerEvents: 'auto', cursor: 'move' }}
-                  onMouseDown={(e) => onPointMouseDown(polygon.id, idx, e)}
-                  onDoubleClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    onPointDoubleClick(polygon.id);
-                  }}
-                />
+                <g key={idx}>
+                  <circle
+                    cx={point.x}
+                    cy={point.y}
+                    r={isSelected || isSingleSelected ? 8 : 6}
+                    fill={isSelected ? '#ff6b6b' : (isSingleSelected ? '#646cff' : '#646cff')}
+                    stroke="#ffffff"
+                    strokeWidth="2"
+                    style={{ pointerEvents: 'auto', cursor: 'move' }}
+                    onMouseDown={(e) => onPointMouseDown(polygon.id, idx, e)}
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      onPointDoubleClick(polygon.id);
+                    }}
+                  />
+                  {hasDuplicates && (
+                    <text
+                      x={point.x + 10}
+                      y={point.y - 8}
+                      fill="#ff6b6b"
+                      fontSize="10"
+                      fontWeight="bold"
+                      textAnchor="middle"
+                      style={{ pointerEvents: 'none', userSelect: 'none' }}
+                    >
+                      2
+                    </text>
+                  )}
+                </g>
               );
             })}
           </svg>
@@ -193,17 +219,35 @@ export function Canvas({
                 strokeDasharray="5,5"
               />
             )}
-            {currentPolygonPoints.map((point, idx) => (
-              <circle
-                key={idx}
-                cx={point.x}
-                cy={point.y}
-                r={6}
-                fill="#646cff"
-                stroke="#ffffff"
-                strokeWidth="2"
-              />
-            ))}
+            {currentPolygonPoints.map((point, idx) => {
+              const hasDuplicates = hasDuplicatePoints(currentPolygonPoints, idx);
+
+              return (
+                <g key={idx}>
+                  <circle
+                    cx={point.x}
+                    cy={point.y}
+                    r={6}
+                    fill="#646cff"
+                    stroke="#ffffff"
+                    strokeWidth="2"
+                  />
+                  {hasDuplicates && (
+                    <text
+                      x={point.x + 10}
+                      y={point.y - 8}
+                      fill="#ff6b6b"
+                      fontSize="10"
+                      fontWeight="bold"
+                      textAnchor="middle"
+                      style={{ pointerEvents: 'none', userSelect: 'none' }}
+                    >
+                      2
+                    </text>
+                  )}
+                </g>
+              );
+            })}
             {previewPoint && (
               <circle
                 cx={previewPoint.x}

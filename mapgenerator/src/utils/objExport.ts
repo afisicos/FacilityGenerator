@@ -19,7 +19,8 @@ export function exportToOBJ(
   polygons: WallPolygon[],
   wallHeight: number,
   wallThickness: number,
-  exportTogether: boolean = true
+  exportTogether: boolean = true,
+  scenarioName: string = 'escenario'
 ): void {
   if (!exportTogether) {
     // Export each polygon separately
@@ -436,7 +437,7 @@ export function exportToOBJ(
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = 'mapa.obj';
+  link.download = `${scenarioName}-muros.obj`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -844,7 +845,7 @@ function exportWallsSeparately(
   alert(`Se han exportado ${polygons.length} archivo(s) de muros`);
 }
 
-function exportFloorsTogether(polygons: WallPolygon[], withVolume: boolean = false): void {
+function exportFloorsTogether(polygons: WallPolygon[], withVolume: boolean = false, scenarioName: string = 'escenario'): void {
   if (polygons.length === 0) {
     alert('No hay polígonos para exportar');
     return;
@@ -1024,17 +1025,17 @@ function exportFloorsTogether(polygons: WallPolygon[], withVolume: boolean = fal
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = 'floor.obj';
+  link.download = `${scenarioName}-piso.obj`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
 
-export function exportFloorToOBJ(polygons: WallPolygon[], exportTogether: boolean = false, withVolume: boolean = false): void {
+export function exportFloorToOBJ(polygons: WallPolygon[], exportTogether: boolean = false, withVolume: boolean = false, scenarioName: string = 'escenario'): void {
   if (exportTogether) {
     // Export all floors together
-    exportFloorsTogether(polygons, withVolume);
+    exportFloorsTogether(polygons, withVolume, scenarioName);
     return;
   }
   
@@ -1179,7 +1180,7 @@ export function exportFloorToOBJ(polygons: WallPolygon[], exportTogether: boolea
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = getSafeFilename(polygon, 'Floor');
+    link.download = `${scenarioName}-piso-${getSafeFilename(polygon, '')}`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
