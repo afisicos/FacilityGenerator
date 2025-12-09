@@ -60,6 +60,8 @@ export default function MapEditor() {
     handleFinishAddingPoints,
     handleDeletePoints,
     handleDisconnectPoints,
+    handleSaveScenario,
+    handleLoadScenario,
   } = useMapHandlers(state, canvasRef);
 
   // Handle point mouse down
@@ -183,6 +185,8 @@ export default function MapEditor() {
         onDisconnectPoints={handleDisconnectPoints}
         onAddPointsToWall={handleAddPointsToWall}
         onFinishAddingPoints={handleFinishAddingPoints}
+        onSaveScenario={handleSaveScenario}
+        onLoadScenario={handleLoadScenario}
       />
       
       <RightPanel

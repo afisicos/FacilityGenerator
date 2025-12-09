@@ -2,6 +2,62 @@ import { useCallback } from 'react';
 import type { WallPolygon, Point } from '../types';
 import { snapToGrid, getPointFromClick, isPointInRect } from '../utils/geometry';
 
+// Función para mostrar notificaciones flotantes
+const showToast = (message: string, duration: number = 3000) => {
+  // Crear elemento de toast
+  const toast = document.createElement('div');
+  toast.textContent = message;
+  toast.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(100, 108, 255, 0.95);
+    color: white;
+    padding: 16px 24px;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    z-index: 10000;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 16px;
+    text-align: center;
+    animation: fadeIn 0.3s ease-out;
+    pointer-events: none;
+  `;
+
+  // Agregar estilos de animación
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+      to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+    @keyframes fadeOut {
+      from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      to { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Agregar al DOM
+  document.body.appendChild(toast);
+
+  // Auto-remover después de la duración
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translate(-50%, -50%) scale(0.9)';
+    toast.style.transition = 'opacity 0.3s ease-in, transform 0.3s ease-in';
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+      if (style.parentNode) {
+        style.parentNode.removeChild(style);
+      }
+    }, 300);
+  }, duration);
+};
+
 interface MapState {
   polygons: WallPolygon[];
   setPolygons: React.Dispatch<React.SetStateAction<WallPolygon[]>>;
@@ -43,6 +99,8 @@ interface MapState {
   setAddToStart: React.Dispatch<React.SetStateAction<boolean>>;
   visiblePolygons: Set<string>;
   setVisiblePolygons: React.Dispatch<React.SetStateAction<Set<string>>>;
+  wallHeight: number;
+  wallThickness: number;
 }
 
 export function useMapHandlers(state: MapState, canvasRef: React.RefObject<HTMLDivElement | null>) {
@@ -85,6 +143,8 @@ export function useMapHandlers(state: MapState, canvasRef: React.RefObject<HTMLD
     addToStart,
     setAddToStart,
     setVisiblePolygons,
+    wallHeight,
+    wallThickness,
   } = state;
 
   const finishPolygon = useCallback(() => {
@@ -619,6 +679,87 @@ export function useMapHandlers(state: MapState, canvasRef: React.RefObject<HTMLD
     setSelectedPointIndex,
   ]);
 
+  const handleSaveScenario = useCallback(() => {
+    // Crear un objeto con todos los datos del escenario
+    const scenarioData = {
+      version: "1.0",
+      timestamp: new Date().toISOString(),
+      polygons: polygons,
+      wallHeight,
+      wallThickness,
+    };
+
+    // Convertir a JSON
+    const jsonString = JSON.stringify(scenarioData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+
+    // Crear enlace de descarga
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `facility-scenario-${Date.now()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    // Mostrar notificación flotante en lugar de alert
+    showToast('Scenario saved successfully!');
+  }, [polygons, wallHeight, wallThickness]);
+
+  const handleLoadScenario = useCallback((file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const scenarioData = JSON.parse(content);
+
+        // Validar que tenga la estructura correcta
+        if (!scenarioData.polygons || !Array.isArray(scenarioData.polygons)) {
+          throw new Error('Invalid scenario file format');
+        }
+
+        // Limpiar estado actual
+        setPolygons([]);
+        setSelectedPoints([]);
+        setSelectedPolygonId(null);
+        setSelectedPointIndex(null);
+        setIsDrawingWall(false);
+        setCurrentPolygonPoints([]);
+        setPreviewPoint(null);
+        setIsAddingToPolygon(false);
+        setAddToStart(false);
+
+        // Cargar los nuevos polygons
+        const loadedPolygons = scenarioData.polygons.map((polygon: any) => ({
+          id: polygon.id || `polygon-${Date.now()}-${Math.random()}`,
+          name: polygon.name,
+          points: polygon.points
+        }));
+
+        setPolygons(loadedPolygons);
+
+        // Agregar todos los polygons al set visible
+        const newVisible = new Set<string>(loadedPolygons.map((p: any) => p.id));
+        setVisiblePolygons(newVisible);
+
+        // Actualizar otros valores si están presentes en el archivo
+        if (scenarioData.wallHeight !== undefined) {
+          // Nota: Estos valores se actualizan en el componente padre
+          console.log('Wall height in scenario:', scenarioData.wallHeight);
+        }
+        if (scenarioData.wallThickness !== undefined) {
+          console.log('Wall thickness in scenario:', scenarioData.wallThickness);
+        }
+
+        // No mostrar mensaje de éxito para la carga
+      } catch (error) {
+        alert('Error loading scenario: ' + (error as Error).message);
+      }
+    };
+    reader.readAsText(file);
+  }, [setPolygons, setSelectedPoints, setSelectedPolygonId, setSelectedPointIndex, setIsDrawingWall, setCurrentPolygonPoints, setPreviewPoint, setIsAddingToPolygon, setAddToStart, setVisiblePolygons]);
+
   return {
     finishPolygon,
     handleMouseDown,
@@ -630,6 +771,8 @@ export function useMapHandlers(state: MapState, canvasRef: React.RefObject<HTMLD
     handleFinishAddingPoints,
     handleDeletePoints,
     handleDisconnectPoints,
+    handleSaveScenario,
+    handleLoadScenario,
   };
 }
 

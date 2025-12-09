@@ -15,6 +15,8 @@ interface LeftPanelProps {
   onDisconnectPoints: () => void;
   onAddPointsToWall: () => void;
   onFinishAddingPoints: () => void;
+  onSaveScenario: () => void;
+  onLoadScenario: (file: File) => void;
 }
 
 export function LeftPanel({
@@ -32,6 +34,8 @@ export function LeftPanel({
   onDisconnectPoints,
   onAddPointsToWall,
   onFinishAddingPoints,
+  onSaveScenario,
+  onLoadScenario,
 }: LeftPanelProps) {
   // Determinar qué polígono está seleccionado
   const getSelectedPolygonInfo = () => {
@@ -117,6 +121,16 @@ export function LeftPanel({
   };
 
   const hasTwoPointsSelected = canDisconnectPoints();
+
+  // Handler para el input file de carga
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      onLoadScenario(file);
+    }
+    // Reset el input para permitir cargar el mismo archivo otra vez
+    e.target.value = '';
+  };
 
   return (
     <div className="side-panel left-panel">
@@ -225,6 +239,31 @@ export function LeftPanel({
             </button>
           )
         )}
+
+        {/* Scenario Management */}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', margin: '12px 0', paddingTop: '12px' }}>
+          <button
+            className="tool-button"
+            onClick={onSaveScenario}
+            title="Save current scenario to JSON file"
+            style={{ width: '100%', marginBottom: '8px' }}
+          >
+            💾 Save Scenario
+          </button>
+          <label
+            className="tool-button"
+            style={{ display: 'block', width: '100%', cursor: 'pointer', textAlign: 'center' }}
+            title="Load scenario from JSON file"
+          >
+            📁 Load Scenario
+            <input
+              type="file"
+              accept=".json"
+              onChange={handleFileChange}
+              style={{ display: 'none' }}
+            />
+          </label>
+        </div>
       </div>
       {tool === 'drawWall' && (
         <div className="tool-hint">
