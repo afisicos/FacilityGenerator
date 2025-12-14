@@ -42,7 +42,6 @@ export default function MapEditor() {
     setExportTogether,
     floorWithVolume,
     setFloorWithVolume,
-    hasClosedPolygons,
     setSelectedPolygonId,
     setSelectedPointIndex,
     setSelectedPoints,
