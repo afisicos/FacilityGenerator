@@ -1,7 +1,19 @@
 {
-  "buildCommand": "npm run build",
+  "version": 2,
+  "buildCommand": "./build.sh",
   "outputDirectory": "dist",
   "installCommand": "npm install",
-  "framework": "vite",
-  "devCommand": "npm run dev"
+  "framework": null,
+  "functions": {},
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "build": {
+    "env": {
+      "NODE_ENV": "production"
+    }
+  }
 }
