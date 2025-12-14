@@ -13,6 +13,7 @@ interface LeftPanelProps {
   onFinishPolygon: () => void;
   onDeletePoints: () => void;
   onDisconnectPoints: () => void;
+  onMergePoints: () => void;
   onAddPointsToWall: () => void;
   onFinishAddingPoints: () => void;
   onSaveScenario: () => void;
@@ -33,6 +34,7 @@ export function LeftPanel({
   onFinishPolygon,
   onDeletePoints,
   onDisconnectPoints,
+  onMergePoints,
   onAddPointsToWall,
   onFinishAddingPoints,
   onSaveScenario,
@@ -122,7 +124,48 @@ export function LeftPanel({
     return !isEndpoint1 && !isEndpoint2;
   };
 
+  const canMergePoints = () => {
+    if (selectedPoints.length !== 2) return false;
+
+    const point1 = selectedPoints[0];
+    const point2 = selectedPoints[1];
+
+    // Caso 1: Puntos adyacentes en la misma polilínea
+    if (point1.polygonId === point2.polygonId) {
+      const polygon = polygons.find(p => p.id === point1.polygonId);
+      if (!polygon) return false;
+
+      const indices = [point1.pointIndex, point2.pointIndex].sort((a, b) => a - b);
+      const [idx1, idx2] = indices;
+
+      // Deben ser adyacentes (diferencia de 1 en índices)
+      if (idx2 - idx1 === 1) {
+        // Ninguno debe ser extremo del trazado
+        const isEndpoint1 = idx1 === 0 || idx1 === polygon.points.length - 1;
+        const isEndpoint2 = idx2 === 0 || idx2 === polygon.points.length - 1;
+        if (!isEndpoint1 && !isEndpoint2) {
+          return true;
+        }
+      }
+    }
+    // Caso 2: Extremos de dos polilíneas diferentes
+    else {
+      const polygon1 = polygons.find(p => p.id === point1.polygonId);
+      const polygon2 = polygons.find(p => p.id === point2.polygonId);
+      if (!polygon1 || !polygon2) return false;
+
+      // Ambos puntos deben ser extremos
+      const isEndpoint1 = point1.pointIndex === 0 || point1.pointIndex === polygon1.points.length - 1;
+      const isEndpoint2 = point2.pointIndex === 0 || point2.pointIndex === polygon2.points.length - 1;
+
+      return isEndpoint1 && isEndpoint2;
+    }
+
+    return false;
+  };
+
   const hasTwoPointsSelected = canDisconnectPoints();
+  const canMergeSelectedPoints = canMergePoints();
 
   // Handler para el input file de carga
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -220,6 +263,15 @@ export function LeftPanel({
             title="Disconnect two adjacent points (neither being endpoints) to split the wall segment"
           >
             🔌 Disconnect Points
+          </button>
+        )}
+        {canMergeSelectedPoints && (
+          <button
+            className="tool-button"
+            onClick={onMergePoints}
+            title="Merge two selected points into one (adjacent points in same wall or endpoints of different walls, joining polylines when needed)"
+          >
+            🔗 Merge Points
           </button>
         )}
         {hasSelectedEndpoint && (
