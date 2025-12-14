@@ -60,7 +60,6 @@ export default function MapEditor() {
     handleFinishAddingPoints,
     handleDeletePoints,
     handleDisconnectPoints,
-    handleMergePoints,
     handleSaveScenario,
     handleLoadScenario,
   } = useMapHandlers(state, canvasRef);
@@ -212,7 +211,6 @@ export default function MapEditor() {
         onFinishPolygon={finishPolygon}
         onDeletePoints={handleDeletePoints}
         onDisconnectPoints={handleDisconnectPoints}
-        onMergePoints={handleMergePoints}
         onAddPointsToWall={handleAddPointsToWall}
         onFinishAddingPoints={handleFinishAddingPoints}
         onSaveScenario={handleSaveScenario}
