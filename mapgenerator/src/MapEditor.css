@@ -209,7 +209,7 @@
   background-image: 
     linear-gradient(to right, rgba(100, 108, 255, 0.1) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(100, 108, 255, 0.1) 1px, transparent 1px);
-  background-size: 20px 20px;
+  background-size: 10px 10px;
   pointer-events: none;
 }
 
@@ -219,7 +219,7 @@
   border: 2px solid #646cff;
   border-radius: 4px;
   cursor: move;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
   pointer-events: auto;
 }
 
@@ -244,8 +244,8 @@
 
 .corner-handle {
   position: absolute;
-  width: 16px;
-  height: 16px;
+  width: 12px;
+  height: 12px;
   background: #646cff;
   border: 2px solid #ffffff;
   border-radius: 50%;
@@ -260,26 +260,26 @@
 }
 
 .corner-handle.top-left {
-  top: -8px;
-  left: -8px;
+  top: -6px;
+  left: -6px;
   cursor: nwse-resize;
 }
 
 .corner-handle.top-right {
-  top: -8px;
-  right: -8px;
+  top: -6px;
+  right: -6px;
   cursor: nesw-resize;
 }
 
 .corner-handle.bottom-left {
-  bottom: -8px;
-  left: -8px;
+  bottom: -6px;
+  left: -6px;
   cursor: nesw-resize;
 }
 
 .corner-handle.bottom-right {
-  bottom: -8px;
-  right: -8px;
+  bottom: -6px;
+  right: -6px;
   cursor: nwse-resize;
 }
 
