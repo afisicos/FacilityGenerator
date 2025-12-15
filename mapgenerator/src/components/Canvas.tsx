@@ -153,7 +153,7 @@ export function Canvas({
                   <circle
                     cx={point.x}
                     cy={point.y}
-                    r={isSelected || isSingleSelected ? 8 : 6}
+                    r={isSelected || isSingleSelected ? 4 : 3}
                     fill={isSelected ? '#ff6b6b' : (isSingleSelected ? '#646cff' : '#646cff')}
                     stroke="#ffffff"
                     strokeWidth="2"
@@ -235,7 +235,7 @@ export function Canvas({
                   <circle
                     cx={point.x}
                     cy={point.y}
-                    r={6}
+                    r={3}
                     fill="#646cff"
                     stroke="#ffffff"
                     strokeWidth="2"
@@ -260,7 +260,7 @@ export function Canvas({
               <circle
                 cx={previewPoint.x}
                 cy={previewPoint.y}
-                r={6}
+                r={3}
                 fill="rgba(100, 108, 255, 0.5)"
                 stroke="#646cff"
                 strokeWidth="2"
@@ -301,7 +301,7 @@ export function Canvas({
               <circle
                 cx={previewPoint.x}
                 cy={previewPoint.y}
-                r={6}
+                r={3}
                 fill="rgba(100, 108, 255, 0.5)"
                 stroke="#646cff"
                 strokeWidth="2"

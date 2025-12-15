@@ -260,26 +260,26 @@
 }
 
 .corner-handle.top-left {
-  top: -6px;
-  left: -6px;
+  top: -4px;
+  left: -4px;
   cursor: nwse-resize;
 }
 
 .corner-handle.top-right {
-  top: -6px;
-  right: -6px;
+  top: -4px;
+  right: -4px;
   cursor: nesw-resize;
 }
 
 .corner-handle.bottom-left {
-  bottom: -6px;
-  left: -6px;
+  bottom: -4px;
+  left: -4px;
   cursor: nesw-resize;
 }
 
 .corner-handle.bottom-right {
-  bottom: -6px;
-  right: -6px;
+  bottom: -4px;
+  right: -4px;
   cursor: nwse-resize;
 }
 

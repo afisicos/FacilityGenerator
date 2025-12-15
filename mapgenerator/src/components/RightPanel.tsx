@@ -14,9 +14,7 @@ interface RightPanelProps {
   onWallHeightChange: (height: number) => void;
   onWallThicknessChange: (thickness: number) => void;
   onTogglePolygonVisibility: (id: string) => void;
-  onToggleExportTogether: () => void;
-  onToggleFloorVolume: () => void;
-  onRenamePolygon: (id: string, name: string) => void;
+  onToggleExportTogether: () => void;  onRenamePolygon: (id: string, name: string) => void;
   onChangePolygonColor: (id: string, color: string) => void;
 }
 
@@ -26,15 +24,11 @@ export function RightPanel({
   zoom,
   polygons,
   visiblePolygons,
-  exportTogether,
-  floorWithVolume,
   onExportWalls,
   onExportFloor,
   onWallHeightChange,
   onWallThicknessChange,
   onTogglePolygonVisibility,
-  onToggleExportTogether,
-  onToggleFloorVolume,
   onRenamePolygon,
   onChangePolygonColor,
 }: RightPanelProps) {
@@ -43,57 +37,26 @@ export function RightPanel({
   return (
     <div className="side-panel right-panel">
       <div className="export-section">
-        {/* Export Together Toggle */}
-        <label className="parameter-label" style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', cursor: 'pointer' }}>
-          <input
-            type="checkbox"
-            checked={exportTogether}
-            onChange={onToggleExportTogether}
-            style={{ marginRight: '8px', cursor: 'pointer', width: '16px', height: '16px' }}
-          />
-          <span>Export together (single file)</span>
-        </label>
-
+      
         <button
           className="tool-button export-button"
           onClick={onExportWalls}
-          title={exportTogether
-            ? "Export all walls together to OBJ 3D format"
-            : "Export each wall separately to OBJ 3D format"
-          }
+          title="Export all walls together to OBJ 3D format"
         >
           📦 Export Walls
         </button>
 
-        {/* Floor with Volume Toggle */}
-        <label className="parameter-label" style={{ display: 'flex', alignItems: 'center', marginTop: '16px', marginBottom: '8px', cursor: 'pointer' }}>
-          <input
-            type="checkbox"
-            checked={floorWithVolume}
-            onChange={onToggleFloorVolume}
-            style={{ marginRight: '8px', cursor: 'pointer', width: '16px', height: '16px' }}
-          />
-          <span>Floor with volume (1 unit height)</span>
-        </label>
 
         <button
           className="tool-button export-button"
           onClick={onExportFloor}
-          title={
-            floorWithVolume
-              ? exportTogether 
-                ? "Export all floors with volume (1 unit height) together"
-                : "Export each floor with volume (1 unit height) separately"
-              : exportTogether 
-                ? "Export all floors as flat surface together"
-                : "Export each floor as flat surface separately"
-          }
+          title="Export all floors"
         >
           🏢 Export Floor
         </button>
         <div className="wall-parameters">
           <label className="parameter-label">
-            Altura de muros:
+            Height:
             <input
               type="number"
               min="1"
@@ -103,10 +66,10 @@ export function RightPanel({
               onChange={(e) => onWallHeightChange(parseFloat(e.target.value) || 10)}
               className="parameter-input"
             />
-            unidades
+            units
           </label>
           <label className="parameter-label">
-            Grosor de muros:
+            Thickness:
             <input
               type="number"
               min="0.1"
@@ -116,7 +79,7 @@ export function RightPanel({
               onChange={(e) => onWallThicknessChange(parseFloat(e.target.value) || 2)}
               className="parameter-input"
             />
-            unidades
+            units
           </label>
         </div>
       </div>
