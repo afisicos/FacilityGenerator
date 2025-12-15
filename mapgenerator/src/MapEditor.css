@@ -230,14 +230,14 @@
 
 .room.selected {
   background: rgba(100, 108, 255, 0.35);
-  border: 3px solid #646cff;
+  border: 6px solid #646cff;
   box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.3), 0 4px 12px rgba(100, 108, 255, 0.4);
   z-index: 10;
 }
 
 .room.preview {
   background: rgba(100, 108, 255, 0.15);
-  border: 2px dashed #646cff;
+  border: 2px dashed #4c2a8a;
   opacity: 0.7;
   pointer-events: none;
 }

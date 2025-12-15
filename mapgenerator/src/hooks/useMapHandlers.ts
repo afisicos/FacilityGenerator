@@ -2,6 +2,17 @@ import { useCallback } from 'react';
 import type { WallPolygon, Point } from '../types';
 import { snapToGrid, getPointFromClick, isPointInRect } from '../utils/geometry';
 
+// Función para generar un color aleatorio en formato hex
+const getRandomColor = (): string => {
+  const colors = [
+    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57',
+    '#FF9FF3', '#54A0FF', '#5F27CD', '#00D2D3', '#FF9F43',
+    '#10AC84', '#EE5A24', '#009432', '#0652DD', '#9980FA',
+    '#FDA7DF', '#E17055', '#81ECEC', '#74B9FF', '#A29BFE'
+  ];
+  return colors[Math.floor(Math.random() * colors.length)];
+};
+
 // Función para mostrar notificaciones flotantes
 const showToast = (message: string, duration: number = 3000) => {
   // Crear elemento de toast
@@ -151,7 +162,8 @@ export function useMapHandlers(state: MapState, canvasRef: React.RefObject<HTMLD
     if (currentPolygonPoints.length >= 3) {
       const newPolygon: WallPolygon = {
         id: `polygon-${Date.now()}`,
-        points: [...currentPolygonPoints]
+        points: [...currentPolygonPoints],
+        fillColor: getRandomColor()
       };
       setPolygons(prev => [...prev, newPolygon]);
     }
@@ -735,7 +747,8 @@ export function useMapHandlers(state: MapState, canvasRef: React.RefObject<HTMLD
         const loadedPolygons = scenarioData.polygons.map((polygon: any) => ({
           id: polygon.id || `polygon-${Date.now()}-${Math.random()}`,
           name: polygon.name,
-          points: polygon.points
+          points: polygon.points,
+          fillColor: polygon.fillColor || getRandomColor()
         }));
 
         setPolygons(loadedPolygons);

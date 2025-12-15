@@ -148,7 +148,7 @@ export function RightPanel({
             {polygons.map((polygon, index) => {
               const isVisible = visiblePolygons.has(polygon.id);
               const isEditing = editingId === polygon.id;
-              const displayName = polygon.name || `Polyline ${index + 1}`;
+              const displayName = polygon.name || `Room ${index + 1}`;
               
               return (
                 <div

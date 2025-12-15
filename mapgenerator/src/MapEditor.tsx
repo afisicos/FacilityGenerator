@@ -1,4 +1,15 @@
 import { useRef, useEffect } from 'react';
+
+// Función para generar un color aleatorio en formato hex
+const getRandomColor = (): string => {
+  const colors = [
+    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57',
+    '#FF9FF3', '#54A0FF', '#5F27CD', '#00D2D3', '#FF9F43',
+    '#10AC84', '#EE5A24', '#009432', '#0652DD', '#9980FA',
+    '#FDA7DF', '#E17055', '#81ECEC', '#74B9FF', '#A29BFE'
+  ];
+  return colors[Math.floor(Math.random() * colors.length)];
+};
 import './MapEditor.css';
 import { useMapState } from './hooks/useMapState';
 import { useMapHandlers } from './hooks/useMapHandlers';
@@ -158,7 +169,7 @@ export default function MapEditor() {
     const currentIds = new Set(polygons.map(p => p.id));
     const newVisible = new Set(visiblePolygons);
     let changed = false;
-    
+
     // Add new polygons
     polygons.forEach(polygon => {
       if (!newVisible.has(polygon.id)) {
@@ -166,7 +177,7 @@ export default function MapEditor() {
         changed = true;
       }
     });
-    
+
     // Remove deleted polygons
     Array.from(newVisible).forEach(id => {
       if (!currentIds.has(id)) {
@@ -174,12 +185,22 @@ export default function MapEditor() {
         changed = true;
       }
     });
-    
+
     if (changed) {
       setVisiblePolygons(newVisible);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [polygons.length]); // Only run when polygon count changes
+
+  // Assign random colors to polygons without colors
+  useEffect(() => {
+    const needsColorUpdate = polygons.some(p => !p.fillColor);
+    if (needsColorUpdate) {
+      setPolygons(prev => prev.map(polygon =>
+        polygon.fillColor ? polygon : { ...polygon, fillColor: getRandomColor() }
+      ));
+    }
+  }, [polygons, setPolygons]);
 
   // Prevent page scroll when mouse is over canvas
   useEffect(() => {

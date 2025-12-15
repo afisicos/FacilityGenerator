@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import type { WallPolygon, Point } from '../types';
 
 // Función helper para convertir color HEX a RGBA con opacidad
@@ -69,6 +70,13 @@ export function Canvas({
   onPointMouseDown,
   onPointDoubleClick,
 }: CanvasProps) {
+  // Memoizar los polígonos visibles con sus colores para forzar re-render
+  const visiblePolygonsWithColors = useMemo(() => {
+    return polygons.filter(p => visiblePolygons.has(p.id)).map(polygon => ({
+      ...polygon,
+      strokeColor: polygon.fillColor || '#6464ff'
+    }));
+  }, [polygons, visiblePolygons]);
   return (
     <div
       ref={canvasRef}
@@ -92,7 +100,7 @@ export function Canvas({
         <div className="grid" />
       
         {/* Wall Polygons */}
-        {polygons.filter(p => visiblePolygons.has(p.id)).map(polygon => (
+        {visiblePolygonsWithColors.map(polygon => (
           <svg
             key={polygon.id}
             className={`wall-polygon ${polygon.id === selectedPolygonId ? 'selected' : ''}`}
@@ -118,7 +126,7 @@ export function Canvas({
             <polyline
               points={polygon.points.map(p => `${p.x},${p.y}`).join(' ')}
               fill="none"
-              stroke={polygon.id === selectedPolygonId ? '#646cff' : '#646cff'}
+              stroke={polygon.strokeColor}
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -127,7 +135,7 @@ export function Canvas({
               <polyline
                 points={`${polygon.points[0].x},${polygon.points[0].y} ${polygon.points.map(p => `${p.x},${p.y}`).join(' ')}`}
                 fill="none"
-                stroke={polygon.id === selectedPolygonId ? '#646cff' : '#646cff'}
+                stroke={polygon.strokeColor}
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
