@@ -185,78 +185,169 @@ export function Canvas({
         ))}
 
         {/* Distance indicators for selected points */}
-        {selectedPoints.length >= 2 && (() => {
-          // Group points by polygon
-          const pointsByPolygon = selectedPoints.reduce((acc, point) => {
-            if (!acc[point.polygonId]) {
-              acc[point.polygonId] = [];
-            }
-            acc[point.polygonId].push(point);
-            return acc;
-          }, {} as Record<string, typeof selectedPoints>);
-
-          // Only show distances if all points are from the same polygon
-          const polygonIds = Object.keys(pointsByPolygon);
-          if (polygonIds.length !== 1) return null;
-
-          const polygonId = polygonIds[0];
-          const polygonPoints = pointsByPolygon[polygonId];
-
-          // Sort points by their index in the polygon
-          polygonPoints.sort((a, b) => a.pointIndex - b.pointIndex);
-
-          const polygon = polygons.find(p => p.id === polygonId);
-          if (!polygon) return null;
-
-          // Create distance labels for each adjacent pair
+        {(() => {
           const distanceLabels = [];
-          for (let i = 0; i < polygonPoints.length - 1; i++) {
-            const point1 = polygonPoints[i];
-            const point2 = polygonPoints[i + 1];
+          let showDistances = false;
 
-            const p1 = polygon.points[point1.pointIndex];
-            const p2 = polygon.points[point2.pointIndex];
+          // Multiple points selected
+          if (selectedPoints.length >= 2) {
+            // Group points by polygon
+            const pointsByPolygon = selectedPoints.reduce((acc, point) => {
+              if (!acc[point.polygonId]) {
+                acc[point.polygonId] = [];
+              }
+              acc[point.polygonId].push(point);
+              return acc;
+            }, {} as Record<string, typeof selectedPoints>);
 
-            if (!p1 || !p2) continue;
+            // Only show distances if all points are from the same polygon
+            const polygonIds = Object.keys(pointsByPolygon);
+            if (polygonIds.length === 1) {
+              const polygonId = polygonIds[0];
+              const polygonPoints = pointsByPolygon[polygonId];
 
-            // Calculate distance
-            const dx = p2.x - p1.x;
-            const dy = p2.y - p1.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+              // Sort points by their index in the polygon
+              polygonPoints.sort((a, b) => a.pointIndex - b.pointIndex);
 
-            // Calculate midpoint for label position
-            const midX = (p1.x + p2.x) / 2;
-            const midY = (p1.y + p2.y) / 2;
+              const polygon = polygons.find(p => p.id === polygonId);
+              if (polygon) {
+                // Create distance labels for each adjacent pair
+                for (let i = 0; i < polygonPoints.length - 1; i++) {
+                  const point1 = polygonPoints[i];
+                  const point2 = polygonPoints[i + 1];
 
-            // Calculate perpendicular offset for label (above the line)
-            const length = Math.sqrt(dx * dx + dy * dy);
-            if (length === 0) continue;
+                  const p1 = polygon.points[point1.pointIndex];
+                  const p2 = polygon.points[point2.pointIndex];
 
-            const offsetX = -dy / length * 15; // 15 units above the line
-            const offsetY = dx / length * 15;
+                  if (!p1 || !p2) continue;
 
-            distanceLabels.push(
-              <text
-                key={`distance-${i}`}
-                x={midX + offsetX}
-                y={midY + offsetY}
-                fill="#ffffff"
-                fontSize="12"
-                fontWeight="bold"
-                textAnchor="middle"
-                dominantBaseline="middle"
-                style={{
-                  filter: 'drop-shadow(0 0 3px rgba(0,0,0,0.8))',
-                  pointerEvents: 'none',
-                  userSelect: 'none'
-                }}
-              >
-                {Math.round(distance)}u
-              </text>
-            );
+                  // Calculate distance
+                  const dx = p2.x - p1.x;
+                  const dy = p2.y - p1.y;
+                  const distance = Math.sqrt(dx * dx + dy * dy);
+
+                  // Calculate midpoint for label position
+                  const midX = (p1.x + p2.x) / 2;
+                  const midY = (p1.y + p2.y) / 2;
+
+                  // Calculate perpendicular offset for label (above the line)
+                  const length = Math.sqrt(dx * dx + dy * dy);
+                  if (length === 0) continue;
+
+                  const offsetX = -dy / length * 15; // 15 units above the line
+                  const offsetY = dx / length * 15;
+
+                  distanceLabels.push(
+                    <text
+                      key={`distance-multi-${i}`}
+                      x={midX + offsetX}
+                      y={midY + offsetY}
+                      fill="#ffffff"
+                      fontSize="12"
+                      fontWeight="bold"
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      style={{
+                        filter: 'drop-shadow(0 0 3px rgba(0,0,0,0.8))',
+                        pointerEvents: 'none',
+                        userSelect: 'none'
+                      }}
+                    >
+                      {Math.round(distance)}
+                    </text>
+                  );
+                }
+                showDistances = distanceLabels.length > 0;
+              }
+            }
+          }
+          // Single point selected - show distances of connected walls
+          else if (selectedPolygonId && selectedPointIndex !== null) {
+            const polygon = polygons.find(p => p.id === selectedPolygonId);
+            if (polygon && polygon.points.length >= 2) {
+              const pointIndex = selectedPointIndex;
+              const points = polygon.points;
+
+              // Get the segments connected to this point
+              const connectedSegments = [];
+
+              // Previous segment (if not the first point)
+              if (pointIndex > 0) {
+                connectedSegments.push({
+                  p1: points[pointIndex - 1],
+                  p2: points[pointIndex],
+                  key: `prev-${pointIndex}`
+                });
+              }
+
+              // Next segment (if not the last point)
+              if (pointIndex < points.length - 1) {
+                connectedSegments.push({
+                  p1: points[pointIndex],
+                  p2: points[pointIndex + 1],
+                  key: `next-${pointIndex}`
+                });
+              }
+
+              // If it's the last point and the polygon is closed, also include the closing segment
+              if (pointIndex === points.length - 1 && points.length >= 3) {
+                const firstPoint = points[0];
+                const lastPoint = points[points.length - 1];
+                // Check if polygon is closed (first and last points are the same)
+                if (firstPoint.x === lastPoint.x && firstPoint.y === lastPoint.y) {
+                  connectedSegments.push({
+                    p1: points[points.length - 2],
+                    p2: points[0],
+                    key: `close-${pointIndex}`
+                  });
+                }
+              }
+
+              // Create distance labels for connected segments
+              connectedSegments.forEach(segment => {
+                const { p1, p2, key } = segment;
+
+                const dx = p2.x - p1.x;
+                const dy = p2.y - p1.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                // Calculate midpoint for label position
+                const midX = (p1.x + p2.x) / 2;
+                const midY = (p1.y + p2.y) / 2;
+
+                // Calculate perpendicular offset for label (above the line)
+                const length = Math.sqrt(dx * dx + dy * dy);
+                if (length === 0) return;
+
+                const offsetX = -dy / length * 15; // 15 units above the line
+                const offsetY = dx / length * 15;
+
+                distanceLabels.push(
+                  <text
+                    key={`distance-single-${key}`}
+                    x={midX + offsetX}
+                    y={midY + offsetY}
+                    fill="#ffffff"
+                    fontSize="12"
+                    fontWeight="bold"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    style={{
+                      filter: 'drop-shadow(0 0 3px rgba(0,0,0,0.8))',
+                      pointerEvents: 'none',
+                      userSelect: 'none'
+                    }}
+                  >
+                    {Math.round(distance)}
+                  </text>
+                );
+              });
+
+              showDistances = distanceLabels.length > 0;
+            }
           }
 
-          if (distanceLabels.length === 0) return null;
+          if (!showDistances) return null;
 
           return (
             <svg
@@ -324,7 +415,7 @@ export function Canvas({
                   userSelect: 'none'
                 }}
               >
-                {Math.round(distance)}u
+                {Math.round(distance)}
               </text>
             </svg>
           );
