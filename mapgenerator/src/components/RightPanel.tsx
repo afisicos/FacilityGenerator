@@ -6,6 +6,7 @@ interface RightPanelProps {
   wallThickness: number;
   polygons: WallPolygon[];
   visiblePolygons: Set<string>;
+  lockedPolygons: Set<string>;
   exportTogether: boolean;
   floorWithVolume: boolean;
   onExportWalls: () => void;
@@ -13,6 +14,7 @@ interface RightPanelProps {
   onWallHeightChange: (height: number) => void;
   onWallThicknessChange: (thickness: number) => void;
   onTogglePolygonVisibility: (id: string) => void;
+  onTogglePolygonLock: (id: string) => void;
   onToggleExportTogether: () => void;
   onToggleFloorVolume: () => void;
   onRenamePolygon: (id: string, name: string) => void;
@@ -24,11 +26,13 @@ export function RightPanel({
   wallThickness,
   polygons,
   visiblePolygons,
+  lockedPolygons,
   onExportWalls,
   onExportFloor,
   onWallHeightChange,
   onWallThicknessChange,
   onTogglePolygonVisibility,
+  onTogglePolygonLock,
   onRenamePolygon,
   onChangePolygonColor,
 }: RightPanelProps) {
@@ -107,6 +111,7 @@ export function RightPanel({
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
             {polygons.map((polygon, index) => {
               const isVisible = visiblePolygons.has(polygon.id);
+              const isLocked = lockedPolygons.has(polygon.id);
               const isEditing = editingId === polygon.id;
               const displayName = polygon.name || `Room ${index + 1}`;
               
@@ -190,20 +195,22 @@ export function RightPanel({
                         style={{
                           fontSize: '13px',
                           fontWeight: 500,
-                          color: isVisible ? '#fff' : '#666',
+                          color: isVisible ? (isLocked ? '#aaa' : '#fff') : '#666',
                           transition: 'color 0.2s ease',
-                          cursor: 'text',
+                          cursor: isLocked ? 'default' : 'text',
                           flex: 1,
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
+                          whiteSpace: 'nowrap',
+                          opacity: isLocked ? 0.7 : 1
                         }}
                         onDoubleClick={(e) => {
+                          if (isLocked) return;
                           e.stopPropagation();
                           setEditingId(polygon.id);
                           setEditingName(displayName);
                         }}
-                        title="Double click to rename"
+                        title={isLocked ? "Polygon is locked - cannot rename" : "Double click to rename"}
                       >
                         {displayName}
                         <span style={{
@@ -224,21 +231,40 @@ export function RightPanel({
                         const color = e.target.value;
                         onChangePolygonColor(polygon.id, color);
                       }}
+                      disabled={isLocked}
                       style={{
                         width: '24px',
                         height: '24px',
                         border: 'none',
                         borderRadius: '4px',
-                        cursor: 'pointer',
+                        cursor: isLocked ? 'not-allowed' : 'pointer',
                         background: 'none',
-                        flexShrink: 0
+                        flexShrink: 0,
+                        opacity: isLocked ? 0.5 : 1
                       }}
-                      title="Change polygon fill color"
+                      title={isLocked ? "Polygon is locked - cannot change color" : "Change polygon fill color"}
                       onClick={(e) => e.stopPropagation()}
                     />
                   </div>
-                  <span 
-                    style={{ 
+                  {/* Lock Button */}
+                  <span
+                    style={{
+                      fontSize: '16px',
+                      transition: 'all 0.2s ease',
+                      cursor: 'pointer',
+                      flexShrink: 0,
+                      opacity: isLocked ? 1 : 0.6
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onTogglePolygonLock(polygon.id);
+                    }}
+                    title={isLocked ? "Unlock polygon" : "Lock polygon (prevents editing)"}
+                  >
+                    {isLocked ? '🔒' : '🔓'}
+                  </span>
+                  <span
+                    style={{
                       fontSize: '18px',
                       transition: 'all 0.2s ease',
                       opacity: isVisible ? 1 : 0.4,

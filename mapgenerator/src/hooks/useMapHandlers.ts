@@ -110,6 +110,7 @@ interface MapState {
   setAddToStart: React.Dispatch<React.SetStateAction<boolean>>;
   visiblePolygons: Set<string>;
   setVisiblePolygons: React.Dispatch<React.SetStateAction<Set<string>>>;
+  lockedPolygons: Set<string>;
   wallHeight: number;
   wallThickness: number;
 }
@@ -154,6 +155,7 @@ export function useMapHandlers(state: MapState, canvasRef: React.RefObject<HTMLD
     addToStart,
     setAddToStart,
     setVisiblePolygons,
+    lockedPolygons,
     wallHeight,
     wallThickness,
   } = state;
@@ -266,6 +268,12 @@ export function useMapHandlers(state: MapState, canvasRef: React.RefObject<HTMLD
       }
 
       if (clickedPolygon && clickedPointIndex !== null) {
+        // Verificar si la polilínea está bloqueada
+        if (lockedPolygons.has(clickedPolygon.id)) {
+          // No permitir selección de puntos de polilíneas bloqueadas
+          return;
+        }
+
         // Verificar si el punto clickeado ya está en la selección múltiple
         const isPointSelected = selectedPoints.some(
           p => p.polygonId === clickedPolygon!.id && p.pointIndex === clickedPointIndex
@@ -315,6 +323,7 @@ export function useMapHandlers(state: MapState, canvasRef: React.RefObject<HTMLD
     isAddingToPolygon,
     selectedPointIndex,
     addToStart,
+    lockedPolygons,
     canvasRef,
     setIsPanning,
     setPanStart,
@@ -397,6 +406,11 @@ export function useMapHandlers(state: MapState, canvasRef: React.RefObject<HTMLD
 
         setDragStart(point);
       } else if (selectedPolygonId !== null && selectedPointIndex !== null) {
+        // Verificar que la polilínea no esté bloqueada antes de permitir el arrastre
+        if (lockedPolygons.has(selectedPolygonId)) {
+          return;
+        }
+
         // Mover un solo punto
         if (!dragStart.x && !dragStart.y) {
           setDragStart(point);
@@ -437,6 +451,7 @@ export function useMapHandlers(state: MapState, canvasRef: React.RefObject<HTMLD
     boxSelectStart,
     selectedPoints,
     isAddingToPolygon,
+    lockedPolygons,
     canvasRef,
     setPanOffset,
     setBoxSelectEnd,
@@ -457,11 +472,14 @@ export function useMapHandlers(state: MapState, canvasRef: React.RefObject<HTMLD
         const pointsInBox: {polygonId: string, pointIndex: number}[] = [];
         
         polygons.forEach(polygon => {
-          polygon.points.forEach((point, index) => {
-            if (isPointInRect(point, boxSelectStart, boxSelectEnd)) {
-              pointsInBox.push({ polygonId: polygon.id, pointIndex: index });
-            }
-          });
+          // Solo seleccionar puntos de polilíneas que no estén bloqueadas
+          if (!lockedPolygons.has(polygon.id)) {
+            polygon.points.forEach((point, index) => {
+              if (isPointInRect(point, boxSelectStart, boxSelectEnd)) {
+                pointsInBox.push({ polygonId: polygon.id, pointIndex: index });
+              }
+            });
+          }
         });
 
         setSelectedPoints(pointsInBox);
@@ -484,6 +502,7 @@ export function useMapHandlers(state: MapState, canvasRef: React.RefObject<HTMLD
     boxSelectStart,
     boxSelectEnd,
     polygons,
+    lockedPolygons,
     setSelectedPoints,
     setIsBoxSelecting,
     setBoxSelectStart,

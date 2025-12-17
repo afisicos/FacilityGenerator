@@ -53,6 +53,8 @@ export default function MapEditor() {
     setExportTogether,
     floorWithVolume,
     setFloorWithVolume,
+    lockedPolygons,
+    togglePolygonLock,
     setSelectedPolygonId,
     setSelectedPointIndex,
     setSelectedPoints,
@@ -83,11 +85,16 @@ export default function MapEditor() {
   ) => {
     e.stopPropagation();
     e.preventDefault();
-    
+
+    // No permitir selección de puntos de polilíneas bloqueadas
+    if (lockedPolygons.has(polygonId)) {
+      return;
+    }
+
     const isPointSelected = selectedPoints.some(
       sp => sp.polygonId === polygonId && sp.pointIndex === pointIndex
     );
-    
+
     if (isPointSelected) {
       setIsDraggingPoint(true);
       setDragStart({ x: 0, y: 0 });
@@ -102,6 +109,11 @@ export default function MapEditor() {
 
   // Handle point double click - select entire polyline
   const handlePointDoubleClick = (polygonId: string) => {
+    // No permitir selección de polilíneas bloqueadas
+    if (lockedPolygons.has(polygonId)) {
+      return;
+    }
+
     const polygon = polygons.find(p => p.id === polygonId);
     if (!polygon) return;
 
@@ -244,6 +256,7 @@ export default function MapEditor() {
         wallThickness={wallThickness}
         polygons={polygons}
         visiblePolygons={visiblePolygons}
+        lockedPolygons={lockedPolygons}
         exportTogether={exportTogether}
         floorWithVolume={floorWithVolume}
         onExportWalls={handleExportWalls}
@@ -259,6 +272,7 @@ export default function MapEditor() {
           }
           setVisiblePolygons(newVisible);
         }}
+        onTogglePolygonLock={togglePolygonLock}
         onToggleExportTogether={() => setExportTogether(!exportTogether)}
         onToggleFloorVolume={() => setFloorWithVolume(!floorWithVolume)}
         onRenamePolygon={handleRenamePolygon}

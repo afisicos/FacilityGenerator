@@ -26,6 +26,7 @@ export function useMapState() {
   const [visiblePolygons, setVisiblePolygons] = useState<Set<string>>(new Set());
   const [exportTogether, setExportTogether] = useState(true);
   const [floorWithVolume, setFloorWithVolume] = useState(false);
+  const [lockedPolygons, setLockedPolygons] = useState<Set<string>>(new Set());
 
   // Detectar si hay polígonos cerrados (sin aberturas)
   const hasClosedPolygons = useMemo(() => {
@@ -40,6 +41,19 @@ export function useMapState() {
       return isClosed;
     });
   }, [polygons]);
+
+  // Función para toggle el bloqueo de una polilínea
+  const togglePolygonLock = (polygonId: string) => {
+    setLockedPolygons(prev => {
+      const newLocked = new Set(prev);
+      if (newLocked.has(polygonId)) {
+        newLocked.delete(polygonId);
+      } else {
+        newLocked.add(polygonId);
+      }
+      return newLocked;
+    });
+  };
 
   // Función para reiniciar completamente el escenario
   const resetScenario = () => {
@@ -63,6 +77,7 @@ export function useMapState() {
     setIsPanning(false);
     setPanStart(null);
     setVisiblePolygons(new Set());
+    setLockedPolygons(new Set());
   };
 
   return {
@@ -114,6 +129,8 @@ export function useMapState() {
     setExportTogether,
     floorWithVolume,
     setFloorWithVolume,
+    lockedPolygons,
+    togglePolygonLock,
     hasClosedPolygons,
     resetScenario,
   };
