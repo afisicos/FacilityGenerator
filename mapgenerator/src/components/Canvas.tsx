@@ -184,29 +184,110 @@ export function Canvas({
           </svg>
         ))}
 
-        {/* Distance indicator for selected points */}
-        {selectedPoints.length === 2 && (() => {
-          const [point1, point2] = selectedPoints;
+        {/* Distance indicators for selected points */}
+        {selectedPoints.length >= 2 && (() => {
+          // Group points by polygon
+          const pointsByPolygon = selectedPoints.reduce((acc, point) => {
+            if (!acc[point.polygonId]) {
+              acc[point.polygonId] = [];
+            }
+            acc[point.polygonId].push(point);
+            return acc;
+          }, {} as Record<string, typeof selectedPoints>);
 
-          // Check if both points are from the same polygon
-          if (point1.polygonId !== point2.polygonId) return null;
+          // Only show distances if all points are from the same polygon
+          const polygonIds = Object.keys(pointsByPolygon);
+          if (polygonIds.length !== 1) return null;
 
-          const polygon = polygons.find(p => p.id === point1.polygonId);
+          const polygonId = polygonIds[0];
+          const polygonPoints = pointsByPolygon[polygonId];
+
+          // Sort points by their index in the polygon
+          polygonPoints.sort((a, b) => a.pointIndex - b.pointIndex);
+
+          const polygon = polygons.find(p => p.id === polygonId);
           if (!polygon) return null;
 
-          const p1 = polygon.points[point1.pointIndex];
-          const p2 = polygon.points[point2.pointIndex];
+          // Create distance labels for each adjacent pair
+          const distanceLabels = [];
+          for (let i = 0; i < polygonPoints.length - 1; i++) {
+            const point1 = polygonPoints[i];
+            const point2 = polygonPoints[i + 1];
 
-          if (!p1 || !p2) return null;
+            const p1 = polygon.points[point1.pointIndex];
+            const p2 = polygon.points[point2.pointIndex];
+
+            if (!p1 || !p2) continue;
+
+            // Calculate distance
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            // Calculate midpoint for label position
+            const midX = (p1.x + p2.x) / 2;
+            const midY = (p1.y + p2.y) / 2;
+
+            // Calculate perpendicular offset for label (above the line)
+            const length = Math.sqrt(dx * dx + dy * dy);
+            if (length === 0) continue;
+
+            const offsetX = -dy / length * 15; // 15 units above the line
+            const offsetY = dx / length * 15;
+
+            distanceLabels.push(
+              <text
+                key={`distance-${i}`}
+                x={midX + offsetX}
+                y={midY + offsetY}
+                fill="#ffffff"
+                fontSize="12"
+                fontWeight="bold"
+                textAnchor="middle"
+                dominantBaseline="middle"
+                style={{
+                  filter: 'drop-shadow(0 0 3px rgba(0,0,0,0.8))',
+                  pointerEvents: 'none',
+                  userSelect: 'none'
+                }}
+              >
+                {Math.round(distance)}u
+              </text>
+            );
+          }
+
+          if (distanceLabels.length === 0) return null;
+
+          return (
+            <svg
+              key="distance-indicators"
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                width: '100%',
+                height: '100%',
+                pointerEvents: 'none',
+                zIndex: 25
+              }}
+            >
+              {distanceLabels}
+            </svg>
+          );
+        })()}
+
+        {/* Distance indicator for drawing preview */}
+        {isDrawingWall && previewPoint && currentPolygonPoints.length > 0 && (() => {
+          const lastPoint = currentPolygonPoints[currentPolygonPoints.length - 1];
 
           // Calculate distance
-          const dx = p2.x - p1.x;
-          const dy = p2.y - p1.y;
+          const dx = previewPoint.x - lastPoint.x;
+          const dy = previewPoint.y - lastPoint.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
 
           // Calculate midpoint for label position
-          const midX = (p1.x + p2.x) / 2;
-          const midY = (p1.y + p2.y) / 2;
+          const midX = (lastPoint.x + previewPoint.x) / 2;
+          const midY = (lastPoint.y + previewPoint.y) / 2;
 
           // Calculate perpendicular offset for label (above the line)
           const length = Math.sqrt(dx * dx + dy * dy);
@@ -217,7 +298,7 @@ export function Canvas({
 
           return (
             <svg
-              key="distance-indicator"
+              key="drawing-distance-indicator"
               style={{
                 position: 'absolute',
                 left: 0,
