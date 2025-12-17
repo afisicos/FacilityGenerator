@@ -148,7 +148,7 @@ export function exportToOBJ(
 
   // Paso 2: Unión booleana de todos los rectángulos
   if (rectangles.length === 0) {
-    alert('No hay muros para exportar');
+    alert('No walls to export');
     return;
   }
 
@@ -450,7 +450,7 @@ function exportWallsSeparately(
   wallThickness: number
 ): void {
   if (polygons.length === 0) {
-    alert('No hay muros para exportar');
+    alert('No walls to export');
     return;
   }
 
@@ -842,12 +842,12 @@ function exportWallsSeparately(
     URL.revokeObjectURL(url);
   });
 
-  alert(`Se han exportado ${polygons.length} archivo(s) de muros`);
+  alert(`${polygons.length} wall file(s) exported`);
 }
 
 function exportFloorsTogether(polygons: WallPolygon[], withVolume: boolean = false, scenarioName: string = 'escenario'): void {
   if (polygons.length === 0) {
-    alert('No hay polígonos para exportar');
+    alert('No polygons to export');
     return;
   }
 
@@ -1041,11 +1041,11 @@ export function exportFloorToOBJ(polygons: WallPolygon[], exportTogether: boolea
   
   // Export each floor separately (current default)
   if (polygons.length === 0) {
-    alert('No hay polígonos para exportar');
+    alert('No polygons to export');
     return;
   }
 
-  // Exportar cada polígono por separado
+  // Export each polygon separately
   polygons.forEach((polygon) => {
     if (polygon.points.length < 3) return;
 
@@ -1187,6 +1187,6 @@ export function exportFloorToOBJ(polygons: WallPolygon[], exportTogether: boolea
     URL.revokeObjectURL(url);
   });
 
-  alert(`Se han exportado ${polygons.length} archivo(s) de suelo`);
+  alert(`${polygons.length} floor file(s) exported`);
 }
 

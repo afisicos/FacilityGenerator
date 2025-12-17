@@ -119,10 +119,10 @@ export default function MapEditor() {
   // Export handlers
   const handleExportWalls = () => {
     // Pedir nombre del escenario al usuario
-    const scenarioName = prompt('Ingresa el nombre del escenario para las paredes:', 'escenario-muros');
+    const scenarioName = prompt('Enter scenario name for walls:', 'walls-scene');
 
     if (!scenarioName || scenarioName.trim() === '') {
-      return; // Cancelar si no se ingresa nombre
+      return; // Cancel if no name is entered
     }
 
     // Filter only visible polygons
@@ -132,10 +132,10 @@ export default function MapEditor() {
 
   const handleExportFloor = () => {
     // Pedir nombre del escenario al usuario
-    const scenarioName = prompt('Ingresa el nombre del escenario para el piso:', 'escenario-piso');
+    const scenarioName = prompt('Enter scenario name for floor:', 'floor-scene');
 
     if (!scenarioName || scenarioName.trim() === '') {
-      return; // Cancelar si no se ingresa nombre
+      return; // Cancel if no name is entered
     }
 
     // Filter only visible polygons
@@ -159,7 +159,7 @@ export default function MapEditor() {
 
   // Reset scenario handler
   const handleResetScenario = () => {
-    if (window.confirm('¿Estás seguro de que quieres reiniciar todo el escenario? Se perderán todos los cambios no guardados.')) {
+    if (window.confirm('Are you sure you want to reset the entire scene? All unsaved changes will be lost.')) {
       resetScenario();
     }
   };
