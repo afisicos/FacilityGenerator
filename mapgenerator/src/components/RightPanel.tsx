@@ -14,7 +14,9 @@ interface RightPanelProps {
   onWallHeightChange: (height: number) => void;
   onWallThicknessChange: (thickness: number) => void;
   onTogglePolygonVisibility: (id: string) => void;
-  onToggleExportTogether: () => void;  onRenamePolygon: (id: string, name: string) => void;
+  onToggleExportTogether: () => void;
+  onToggleFloorVolume: () => void;
+  onRenamePolygon: (id: string, name: string) => void;
   onChangePolygonColor: (id: string, color: string) => void;
 }
 
