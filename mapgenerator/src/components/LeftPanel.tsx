@@ -137,7 +137,7 @@ export function LeftPanel({
 
   return (
     <div className="side-panel left-panel">
-      <h1 className="panel-title">Facility Generator</h1>
+      <h1 className="panel-title">3D Facility Generator</h1>
       
       {/* Selected Polyline Info */}
       {selectedPolygonInfo && (
