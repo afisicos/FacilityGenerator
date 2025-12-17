@@ -184,6 +184,71 @@ export function Canvas({
           </svg>
         ))}
 
+        {/* Distance indicator for selected points */}
+        {selectedPoints.length === 2 && (() => {
+          const [point1, point2] = selectedPoints;
+
+          // Check if both points are from the same polygon
+          if (point1.polygonId !== point2.polygonId) return null;
+
+          const polygon = polygons.find(p => p.id === point1.polygonId);
+          if (!polygon) return null;
+
+          const p1 = polygon.points[point1.pointIndex];
+          const p2 = polygon.points[point2.pointIndex];
+
+          if (!p1 || !p2) return null;
+
+          // Calculate distance
+          const dx = p2.x - p1.x;
+          const dy = p2.y - p1.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          // Calculate midpoint for label position
+          const midX = (p1.x + p2.x) / 2;
+          const midY = (p1.y + p2.y) / 2;
+
+          // Calculate perpendicular offset for label (above the line)
+          const length = Math.sqrt(dx * dx + dy * dy);
+          if (length === 0) return null;
+
+          const offsetX = -dy / length * 15; // 15 units above the line
+          const offsetY = dx / length * 15;
+
+          return (
+            <svg
+              key="distance-indicator"
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                width: '100%',
+                height: '100%',
+                pointerEvents: 'none',
+                zIndex: 25
+              }}
+            >
+              {/* Distance label */}
+              <text
+                x={midX + offsetX}
+                y={midY + offsetY}
+                fill="#ffffff"
+                fontSize="12"
+                fontWeight="bold"
+                textAnchor="middle"
+                dominantBaseline="middle"
+                style={{
+                  filter: 'drop-shadow(0 0 3px rgba(0,0,0,0.8))',
+                  pointerEvents: 'none',
+                  userSelect: 'none'
+                }}
+              >
+                {Math.round(distance)}u
+              </text>
+            </svg>
+          );
+        })()}
+
         {/* Preview polygon while drawing */}
         {isDrawingWall && currentPolygonPoints.length > 0 && (
           <svg

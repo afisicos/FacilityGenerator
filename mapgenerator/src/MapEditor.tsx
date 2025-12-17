@@ -242,7 +242,6 @@ export default function MapEditor() {
       <RightPanel
         wallHeight={wallHeight}
         wallThickness={wallThickness}
-        zoom={zoom}
         polygons={polygons}
         visiblePolygons={visiblePolygons}
         exportTogether={exportTogether}
