@@ -290,6 +290,22 @@ export default function MapEditor() {
         onPointMouseDown={handlePointMouseDown}
         onPointDoubleClick={handlePointDoubleClick}
       />
+
+      {/* Drawing hint panel */}
+      {isDrawingWall && (
+        <div
+          className="drawing-hint-panel"
+        >
+          Right-click to finish wall
+        </div>
+      )}
+
+      {/* Zoom indicator */}
+      <div
+        className="zoom-indicator-fixed"
+      >
+        Zoom: {Math.round(zoom * 100)}%
+      </div>
     </div>
   );
 }

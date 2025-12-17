@@ -85,9 +85,6 @@ export function RightPanel({
           </label>
         </div>
       </div>
-      <div className="zoom-indicator">
-        Zoom: {Math.round(zoom * 100)}%
-      </div>
 
       {/* Polygon List */}
       {polygons.length > 0 && (

@@ -142,13 +142,19 @@
   align-items: flex-end;
 }
 
-.zoom-indicator {
-  padding: 0.5rem 1rem;
+.zoom-indicator-fixed {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 8px 16px;
   background: rgba(100, 108, 255, 0.1);
   border: 1px solid rgba(100, 108, 255, 0.3);
-  border-radius: 6px;
-  font-size: 0.9rem;
+  border-radius: 8px;
+  font-size: 14px;
   color: #a0a0ff;
+  backdrop-filter: blur(8px);
+  z-index: 150;
+  pointer-events: none;
 }
 
 .parameter-label {
@@ -230,5 +236,34 @@
 
 .canvas::-webkit-scrollbar-thumb:hover {
   background: #4a4a4a;
+}
+
+/* Drawing hint panel */
+.drawing-hint-panel {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(100, 108, 255, 0.1);
+  border: 1px solid rgba(100, 108, 255, 0.3);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #a0a0ff;
+  backdrop-filter: blur(8px);
+  z-index: 200;
+  pointer-events: none;
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
