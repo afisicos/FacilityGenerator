@@ -725,11 +725,18 @@ export function useMapHandlers(state: MapState, canvasRef: React.RefObject<HTMLD
     const jsonString = JSON.stringify(scenarioData, null, 2);
     const blob = new Blob([jsonString], { type: 'application/json' });
 
+    // Pedir nombre del archivo al usuario
+    const fileName = prompt('Enter scenario name:', `facility-scenario-${Date.now()}`);
+
+    if (!fileName || fileName.trim() === '') {
+      return; // Cancel if no name is entered
+    }
+
     // Crear enlace de descarga
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `facility-scenario-${Date.now()}.json`;
+    link.download = `${fileName.trim()}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

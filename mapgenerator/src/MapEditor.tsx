@@ -214,6 +214,50 @@ export default function MapEditor() {
     }
   }, [polygons, setPolygons]);
 
+  // Calculate total wall distance for selected polygon
+  const getSelectedPolygonInfo = () => {
+    let polygonId: string | null = null;
+
+    // If there's an individual point selected
+    if (selectedPolygonId) {
+      polygonId = selectedPolygonId;
+    }
+    // If there are multiple points selected, check if all are from the same polygon
+    else if (selectedPoints.length > 0) {
+      const firstPolygonId = selectedPoints[0].polygonId;
+      const allSamePolygon = selectedPoints.every(p => p.polygonId === firstPolygonId);
+      if (allSamePolygon) {
+        polygonId = firstPolygonId;
+      }
+    }
+
+    if (!polygonId) return null;
+
+    const polygon = polygons.find(p => p.id === polygonId);
+    if (!polygon) return null;
+
+    // Calculate total wall distance
+    let totalDistance = 0;
+    for (let i = 0; i < polygon.points.length - 1; i++) {
+      const p1 = polygon.points[i];
+      const p2 = polygon.points[i + 1];
+      const distance = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+      totalDistance += distance;
+    }
+
+    const polygonIndex = polygons.findIndex(p => p.id === polygonId) + 1;
+    const displayName = polygon.name || `Room ${polygonIndex}`;
+
+    return {
+      polygon,
+      displayName,
+      totalDistance: Math.round(totalDistance * 100) / 100, // Round to 2 decimal places
+      selectedPointsCount: selectedPoints.length
+    };
+  };
+
+  const selectedPolygonInfo = getSelectedPolygonInfo();
+
   // Prevent page scroll when mouse is over canvas
   useEffect(() => {
     const handleWheelGlobal = (e: WheelEvent) => {
@@ -229,8 +273,52 @@ export default function MapEditor() {
     };
   }, []);
 
+  // Handler para el input file de carga
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleLoadScenario(file);
+    }
+    // Reset el input para permitir cargar el mismo archivo otra vez
+    e.target.value = '';
+  };
+
   return (
     <div className="map-editor">
+      {/* Top Bar with Title and Scenario Buttons */}
+      <div className="top-bar">
+        <div className="scenario-buttons-top">
+          <button
+            className="scenario-icon-button"
+            onClick={handleSaveScenario}
+            title="Save current scenario to JSON file"
+          >
+            💾
+          </button>
+          <label
+            className="scenario-icon-button"
+            title="Load scenario from JSON file"
+          >
+            📁
+            <input
+              type="file"
+              accept=".json"
+              onChange={handleFileChange}
+              style={{ display: 'none' }}
+            />
+          </label>
+          <button
+            className="scenario-icon-button delete-button"
+            onClick={handleResetScenario}
+            title="Reset entire scenario (delete all walls and reset state)"
+          >
+            🔄
+          </button>
+        </div>
+        <h1 className="app-title">3D Facility Generator</h1>
+        <div className="top-bar-spacer"></div>
+      </div>
+
       <LeftPanel
         tool={tool}
         isDrawingWall={isDrawingWall}
@@ -246,9 +334,6 @@ export default function MapEditor() {
         onDisconnectPoints={handleDisconnectPoints}
         onAddPointsToWall={handleAddPointsToWall}
         onFinishAddingPoints={handleFinishAddingPoints}
-        onSaveScenario={handleSaveScenario}
-        onLoadScenario={handleLoadScenario}
-        onResetScenario={handleResetScenario}
       />
       
       <RightPanel
@@ -310,6 +395,32 @@ export default function MapEditor() {
           className="drawing-hint-panel"
         >
           Right-click to finish wall
+        </div>
+      )}
+
+      {/* Selected Polygon Info Panel */}
+      {selectedPolygonInfo && (
+        <div className="selected-polygon-panel">
+          <div className="selected-polygon-header">
+            <span className="selected-polygon-label">Selected Room</span>
+            <span className="selected-polygon-name">{selectedPolygonInfo.displayName}</span>
+          </div>
+          <div className="selected-polygon-details">
+            <div className="detail-item">
+              <span className="detail-label">Points:</span>
+              <span className="detail-value">{selectedPolygonInfo.polygon.points.length}</span>
+            </div>
+            <div className="detail-item">
+              <span className="detail-label">Total Wall Length:</span>
+              <span className="detail-value">{selectedPolygonInfo.totalDistance} units</span>
+            </div>
+            {selectedPolygonInfo.selectedPointsCount > 0 && selectedPolygonInfo.selectedPointsCount < selectedPolygonInfo.polygon.points.length && (
+              <div className="detail-item">
+                <span className="detail-label">Selected Points:</span>
+                <span className="detail-value">{selectedPolygonInfo.selectedPointsCount}</span>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
