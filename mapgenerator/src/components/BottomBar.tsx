@@ -7,7 +7,7 @@ interface BottomBarProps {
 }
 
 // Enhanced Slider Input Component
-function SliderInput({ label, value, onChange, min, max, step, unit = '' }: {
+function SliderInput({ label, value, onChange, min, max, step, unit = '', showDecimal = false }: {
   label: string;
   value: number;
   onChange: (value: number) => void;
@@ -15,6 +15,7 @@ function SliderInput({ label, value, onChange, min, max, step, unit = '' }: {
   max: number;
   step: number;
   unit?: string;
+  showDecimal?: boolean;
 }) {
   const percentage = ((value - min) / (max - min)) * 100;
 
@@ -51,7 +52,7 @@ function SliderInput({ label, value, onChange, min, max, step, unit = '' }: {
         <span className="bottom-slider-max">{max}</span>
 
         <div className="bottom-slider-value-display">
-          <span className="bottom-slider-value">{value}</span>
+          <span className="bottom-slider-value">{showDecimal ? value.toFixed(1) : value}</span>
           <span className="bottom-slider-unit">{unit}</span>
         </div>
       </div>
@@ -86,6 +87,7 @@ export function BottomBar({
           max={10}
           step={0.1}
           unit=" units"
+          showDecimal={true}
         />
       </div>
     </div>
