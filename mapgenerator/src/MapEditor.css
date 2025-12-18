@@ -153,7 +153,6 @@
   position: fixed;
   top: 70px;
   bottom: 0;
-  width: 240px;
   background: linear-gradient(135deg, #2d2d2d 0%, #1f1f1f 100%);
   padding: 0.5rem;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
@@ -166,11 +165,13 @@
 
 .left-panel {
   left: 0;
+  width: 140px;
   border-right: 2px solid #3a3a3a;
 }
 
 .right-panel {
   right: 0;
+  width: 200px;
   border-left: 2px solid #3a3a3a;
   align-items: flex-end;
 }
@@ -418,7 +419,7 @@
 .zoom-indicator-fixed {
   position: fixed;
   bottom: 70px;
-  right: 300px;
+  right: 220px;
   padding: 8px 16px;
   background: rgba(100, 108, 255, 0.1);
   border: 1px solid rgba(100, 108, 255, 0.3);
@@ -459,8 +460,8 @@
 
 .canvas {
   position: absolute;
-  left: 140px;
-  right: 140px;
+  left: 120px;
+  right: 200px;
   top: 70px;
   bottom: 50px;
   overflow: hidden;
