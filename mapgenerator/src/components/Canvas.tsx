@@ -268,6 +268,54 @@ export function Canvas({
                     </text>
                   );
                 }
+
+                // If polygon is closed and all points are selected, add closing distance
+                if (polygon.isClosed && polygonPoints.length === polygon.points.length) {
+                  const lastPoint = polygonPoints[polygonPoints.length - 1];
+                  const firstPoint = polygonPoints[0];
+
+                  const p1 = polygon.points[lastPoint.pointIndex]; // Last point
+                  const p2 = polygon.points[firstPoint.pointIndex]; // First point
+
+                  if (p1 && p2) {
+                    // Calculate distance
+                    const dx = p2.x - p1.x;
+                    const dy = p2.y - p1.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    // Calculate midpoint for label position
+                    const midX = (p1.x + p2.x) / 2;
+                    const midY = (p1.y + p2.y) / 2;
+
+                    // Calculate perpendicular offset for label (above the line)
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    if (length > 0) {
+                      const offsetX = -dy / length * 15; // 15 units above the line
+                      const offsetY = dx / length * 15;
+
+                      distanceLabels.push(
+                        <text
+                          key={`distance-multi-closing`}
+                          x={midX + offsetX}
+                          y={midY + offsetY}
+                          fill="#ffffff"
+                          fontSize="12"
+                          fontWeight="bold"
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                          style={{
+                            filter: 'drop-shadow(0 0 3px rgba(0,0,0,0.8))',
+                            pointerEvents: 'none',
+                            userSelect: 'none'
+                          }}
+                        >
+                          {Math.round(distance)}
+                        </text>
+                      );
+                    }
+                  }
+                }
+
                 showDistances = distanceLabels.length > 0;
               }
             }
