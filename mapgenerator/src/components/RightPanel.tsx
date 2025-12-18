@@ -1,6 +1,61 @@
 import { useState } from 'react';
 import type { WallPolygon } from '../types';
 
+// Enhanced Slider Input Component
+interface SliderInputProps {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+  min: number;
+  max: number;
+  step: number;
+  unit?: string;
+}
+
+function SliderInput({ label, value, onChange, min, max, step, unit = '' }: SliderInputProps) {
+  const percentage = ((value - min) / (max - min)) * 100;
+
+  return (
+    <div className="enhanced-slider-container">
+      <div className="enhanced-slider-header">
+        <label className="enhanced-slider-label">{label}</label>
+        <div className="enhanced-slider-value-display">
+          <span className="enhanced-slider-value">{value}</span>
+          <span className="enhanced-slider-unit">{unit}</span>
+        </div>
+      </div>
+
+      <div className="enhanced-slider-wrapper">
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={(e) => onChange(parseFloat(e.target.value))}
+          className="enhanced-slider-input"
+        />
+
+        <div className="enhanced-slider-track">
+          <div
+            className="enhanced-slider-fill"
+            style={{ width: `${percentage}%` }}
+          />
+          <div
+            className="enhanced-slider-thumb"
+            style={{ left: `${percentage}%` }}
+          />
+        </div>
+      </div>
+
+      <div className="enhanced-slider-range">
+        <span className="enhanced-slider-min">{min}</span>
+        <span className="enhanced-slider-max">{max}</span>
+      </div>
+    </div>
+  );
+}
+
 interface RightPanelProps {
   wallHeight: number;
   wallThickness: number;
@@ -59,44 +114,38 @@ export function RightPanel({
           🏢 Export Floor
         </button>
         <div className="wall-parameters">
-          <label className="parameter-label">
-            Height:
-            <input
-              type="number"
-              min="1"
-              max="50"
-              step="0.5"
-              value={wallHeight}
-              onChange={(e) => onWallHeightChange(parseFloat(e.target.value) || 10)}
-              className="parameter-input"
-            />
-            units
-          </label>
-          <label className="parameter-label">
-            Thickness:
-            <input
-              type="number"
-              min="0.1"
-              max="10"
-              step="0.1"
-              value={wallThickness}
-              onChange={(e) => onWallThicknessChange(parseFloat(e.target.value) || 2)}
-              className="parameter-input"
-            />
-            units
-          </label>
+          <SliderInput
+            label="Wall Height"
+            value={wallHeight}
+            onChange={onWallHeightChange}
+            min={1}
+            max={50}
+            step={1}
+            unit=" units"
+          />
+
+          <SliderInput
+            label="Wall Thickness"
+            value={wallThickness}
+            onChange={onWallThicknessChange}
+            min={0.1}
+            max={10}
+            step={0.1}
+            unit=" units"
+          />
         </div>
       </div>
 
       {/* Polygon List */}
       {polygons.length > 0 && (
-        <div style={{ 
-          marginTop: '20px', 
-          paddingTop: '20px', 
+        <div style={{
+          marginTop: '20px',
+          paddingTop: '20px',
           borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-          maxHeight: '300px',
+          flex: 1,
           overflowY: 'auto',
-          width: '100%'
+          width: '100%',
+          minHeight: 0
         }}>
           <h3 style={{ 
             fontSize: '12px', 

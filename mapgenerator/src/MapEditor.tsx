@@ -389,6 +389,7 @@ export default function MapEditor() {
         boxSelectEnd={boxSelectEnd}
         zoom={zoom}
         panOffset={panOffset}
+        wallThickness={wallThickness}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}

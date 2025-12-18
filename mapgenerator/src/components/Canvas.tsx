@@ -38,6 +38,7 @@ interface CanvasProps {
   boxSelectEnd: Point | null;
   zoom: number;
   panOffset: Point;
+  wallThickness: number;
   onMouseDown: (e: React.MouseEvent<HTMLDivElement>) => void;
   onMouseMove: (e: React.MouseEvent<HTMLDivElement>) => void;
   onMouseUp: (e: React.MouseEvent<HTMLDivElement>) => void;
@@ -63,6 +64,7 @@ export function Canvas({
   boxSelectEnd,
   zoom,
   panOffset,
+  wallThickness,
   onMouseDown,
   onMouseMove,
   onMouseUp,
@@ -128,7 +130,7 @@ export function Canvas({
                 points={polygon.points.map(p => `${p.x},${p.y}`).join(' ')}
                 fill="none"
                 stroke={polygon.strokeColor}
-                strokeWidth="2"
+                strokeWidth={wallThickness}
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
@@ -137,7 +139,7 @@ export function Canvas({
                 points={polygon.points.map(p => `${p.x},${p.y}`).join(' ')}
                 fill="none"
                 stroke={polygon.strokeColor}
-                strokeWidth="2"
+                strokeWidth={wallThickness}
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
@@ -147,7 +149,7 @@ export function Canvas({
                 points={`${polygon.points[0].x},${polygon.points[0].y} ${polygon.points.map(p => `${p.x},${p.y}`).join(' ')}`}
                 fill="none"
                 stroke={polygon.strokeColor}
-                strokeWidth="2"
+                strokeWidth={wallThickness}
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 opacity="0"
@@ -501,7 +503,7 @@ export function Canvas({
               points={currentPolygonPoints.map(p => `${p.x},${p.y}`).join(' ')}
               fill="none"
               stroke="#646cff"
-              strokeWidth="2"
+              strokeWidth={wallThickness}
               strokeDasharray="5,5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -521,7 +523,7 @@ export function Canvas({
                 x2={previewPoint.x}
                 y2={previewPoint.y}
                 stroke="#646cff"
-                strokeWidth="2"
+                strokeWidth={wallThickness}
                 strokeDasharray="5,5"
               />
             )}
@@ -593,7 +595,7 @@ export function Canvas({
                 x2={previewPoint.x}
                 y2={previewPoint.y}
                 stroke="#646cff"
-                strokeWidth="2"
+                strokeWidth={wallThickness}
                 strokeDasharray="5,5"
               />
               <circle
