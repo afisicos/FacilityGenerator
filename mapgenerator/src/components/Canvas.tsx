@@ -114,23 +114,34 @@ export function Canvas({
               zIndex: polygon.id === selectedPolygonId ? 10 : 5
             }}
           >
-            {/* Polígono cerrado cuando hay 3 o más puntos */}
-            {polygon.points.length >= 3 && (
+            {/* Polígono cerrado con relleno */}
+            {polygon.isClosed && polygon.points.length >= 3 && (
               <polygon
                 points={polygon.points.map(p => `${p.x},${p.y}`).join(' ')}
                 fill={polygon.fillColor ? hexToRgba(polygon.fillColor, polygon.id === selectedPolygonId ? 0.2 : 0.1) : (polygon.id === selectedPolygonId ? 'rgba(100, 108, 255, 0.2)' : 'rgba(100, 108, 255, 0.1)')}
                 stroke="none"
               />
             )}
-            {/* Líneas del contorno */}
-            <polyline
-              points={polygon.points.map(p => `${p.x},${p.y}`).join(' ')}
-              fill="none"
-              stroke={polygon.strokeColor}
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            {/* Líneas del contorno - siempre se muestran */}
+            {polygon.isClosed ? (
+              <polygon
+                points={polygon.points.map(p => `${p.x},${p.y}`).join(' ')}
+                fill="none"
+                stroke={polygon.strokeColor}
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            ) : (
+              <polyline
+                points={polygon.points.map(p => `${p.x},${p.y}`).join(' ')}
+                fill="none"
+                stroke={polygon.strokeColor}
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            )}
             {polygon.points.length > 0 && (
               <polyline
                 points={`${polygon.points[0].x},${polygon.points[0].y} ${polygon.points.map(p => `${p.x},${p.y}`).join(' ')}`}
@@ -278,6 +289,13 @@ export function Canvas({
                   p2: points[pointIndex],
                   key: `prev-${pointIndex}`
                 });
+              } else if (pointIndex === 0 && polygon.isClosed && points.length >= 3) {
+                // If it's the first point of a closed polygon, include the closing segment from the last point
+                connectedSegments.push({
+                  p1: points[points.length - 1],
+                  p2: points[0],
+                  key: `close-first-${pointIndex}`
+                });
               }
 
               // Next segment (if not the last point)
@@ -290,17 +308,12 @@ export function Canvas({
               }
 
               // If it's the last point and the polygon is closed, also include the closing segment
-              if (pointIndex === points.length - 1 && points.length >= 3) {
-                const firstPoint = points[0];
-                const lastPoint = points[points.length - 1];
-                // Check if polygon is closed (first and last points are the same)
-                if (firstPoint.x === lastPoint.x && firstPoint.y === lastPoint.y) {
-                  connectedSegments.push({
-                    p1: points[points.length - 2],
-                    p2: points[0],
-                    key: `close-${pointIndex}`
-                  });
-                }
+              if (pointIndex === points.length - 1 && polygon.isClosed && points.length >= 3) {
+                connectedSegments.push({
+                  p1: points[points.length - 1],
+                  p2: points[0],
+                  key: `close-${pointIndex}`
+                });
               }
 
               // Create distance labels for connected segments

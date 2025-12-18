@@ -55,10 +55,8 @@ export function exportToOBJ(
     const totalPoints = polygon.points.length;
     if (totalPoints < 2) return;
 
-    // Verificar si el polígono está cerrado
-    const firstPoint = polygon.points[0];
-    const lastPoint = polygon.points[totalPoints - 1];
-    const isClosed = firstPoint.x === lastPoint.x && firstPoint.y === lastPoint.y;
+    // El polígono está cerrado según su propiedad isClosed
+    const isClosed = polygon.isClosed;
     
     const segmentCount = isClosed ? totalPoints : totalPoints - 1;
 
@@ -871,16 +869,10 @@ function exportFloorsTogether(polygons: WallPolygon[], withVolume: boolean = fal
   const closedPolygons: polygonClipping.Polygon[] = [];
   
   polygons.forEach(polygon => {
-    if (polygon.points.length < 3) return;
+    if (!polygon.isClosed || polygon.points.length < 3) return;
     
     const points = [...polygon.points];
-    const firstPoint = points[0];
-    const lastPoint = points[points.length - 1];
-    
-    const isClosed = firstPoint.x === lastPoint.x && firstPoint.y === lastPoint.y;
-    if (!isClosed) {
-      points.push({ ...firstPoint });
-    }
+    // Para polígonos cerrados, no necesitamos añadir el punto de cierre duplicado
     
     const ring: [number, number][] = points.map(p => [p.x, p.y]);
     closedPolygons.push([ring]);
@@ -1047,7 +1039,7 @@ export function exportFloorToOBJ(polygons: WallPolygon[], exportTogether: boolea
 
   // Export each polygon separately
   polygons.forEach((polygon) => {
-    if (polygon.points.length < 3) return;
+    if (!polygon.isClosed || polygon.points.length < 3) return;
 
     // Calcular el centro geométrico del polígono
     let minX = Infinity, maxX = -Infinity;
@@ -1063,16 +1055,8 @@ export function exportFloorToOBJ(polygons: WallPolygon[], exportTogether: boolea
     const centerX = (minX + maxX) / 2;
     const centerY = (minY + maxY) / 2;
 
-    // Crear un polígono cerrado (unir primero y último punto)
+    // Para polígonos cerrados, usar los puntos tal cual (ya están cerrados conceptualmente)
     const points = [...polygon.points];
-    const firstPoint = points[0];
-    const lastPoint = points[points.length - 1];
-    
-    // Si no está cerrado, cerrar el polígono
-    const isClosed = firstPoint.x === lastPoint.x && firstPoint.y === lastPoint.y;
-    if (!isClosed) {
-      points.push({ ...firstPoint });
-    }
 
     // Preparar datos para earcut
     const flatCoords: number[] = [];

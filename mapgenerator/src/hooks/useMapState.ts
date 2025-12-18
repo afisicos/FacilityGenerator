@@ -28,18 +28,9 @@ export function useMapState() {
   const [floorWithVolume, setFloorWithVolume] = useState(false);
   const [lockedPolygons, setLockedPolygons] = useState<Set<string>>(new Set());
 
-  // Detectar si hay polígonos cerrados (sin aberturas)
+  // Detectar si hay polígonos cerrados
   const hasClosedPolygons = useMemo(() => {
-    return polygons.some(polygon => {
-      const totalPoints = polygon.points.length;
-      if (totalPoints < 2) return false;
-
-      const firstPoint = polygon.points[0];
-      const lastPoint = polygon.points[totalPoints - 1];
-      const isClosed = firstPoint.x === lastPoint.x && firstPoint.y === lastPoint.y;
-
-      return isClosed;
-    });
+    return polygons.some(polygon => polygon.isClosed);
   }, [polygons]);
 
   // Función para toggle el bloqueo de una polilínea

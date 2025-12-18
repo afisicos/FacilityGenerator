@@ -245,8 +245,16 @@ export default function MapEditor() {
       totalDistance += distance;
     }
 
+    // Add closing segment for closed polygons
+    if (polygon.isClosed && polygon.points.length >= 3) {
+      const firstPoint = polygon.points[0];
+      const lastPoint = polygon.points[polygon.points.length - 1];
+      const closingDistance = Math.sqrt(Math.pow(firstPoint.x - lastPoint.x, 2) + Math.pow(firstPoint.y - lastPoint.y, 2));
+      totalDistance += closingDistance;
+    }
+
     const polygonIndex = polygons.findIndex(p => p.id === polygonId) + 1;
-    const displayName = polygon.name || `Room ${polygonIndex}`;
+    const displayName = polygon.name || `${polygon.isClosed ? 'Room' : 'Line'} ${polygonIndex}`;
 
     return {
       polygon,
@@ -422,7 +430,7 @@ export default function MapEditor() {
             Left click to add points
           </div>
           <div className="drawing-hint-right">
-            Right click to finish wall
+            {isDrawingWall && currentPolygonPoints.length >= 3 ? "Click first point to close" : "Right click to finish"}
           </div>
         </div>
       )}

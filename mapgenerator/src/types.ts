@@ -5,9 +5,10 @@ export type Point = {
 
 export type WallPolygon = {
   id: string;
-  name?: string; // Nombre personalizado de la polilínea
-  points: Point[]; // Array de puntos que definen el polígono del muro
-  fillColor?: string; // Color de relleno del polígono (RGBA)
+  name?: string; // Nombre personalizado de la polilínea/polígono
+  points: Point[]; // Array de puntos que definen la polilínea o el polígono
+  fillColor?: string; // Color de relleno del polígono (solo para polígonos cerrados)
+  isClosed: boolean; // true = polígono cerrado, false = polilínea abierta
 };
 
 export type Tool = 'select' | 'drawWall';

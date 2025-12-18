@@ -162,11 +162,12 @@ export function useMapHandlers(state: MapState, canvasRef: React.RefObject<HTMLD
 
   const finishPolygon = useCallback(() => {
     if (currentPolygonPoints.length >= 2) {
-      const newPolygon: WallPolygon = {
-        id: `polygon-${Date.now()}`,
-        points: [...currentPolygonPoints],
-        fillColor: getRandomColor()
-      };
+        const newPolygon: WallPolygon = {
+          id: `polygon-${Date.now()}`,
+          points: [...currentPolygonPoints],
+          fillColor: undefined, // Polilíneas abiertas no tienen relleno
+          isClosed: false
+        };
       setPolygons(prev => [...prev, newPolygon]);
     }
     setCurrentPolygonPoints([]);
@@ -241,6 +242,23 @@ export function useMapHandlers(state: MapState, canvasRef: React.RefObject<HTMLD
     } else if (tool === 'drawWall') {
       // Si estamos dibujando, añadir punto al polígono actual
       if (isDrawingWall) {
+        // Verificar si se hizo clic en el primer punto para cerrar el polígono
+        const firstPoint = currentPolygonPoints[0];
+        if (firstPoint && firstPoint.x === point.x && firstPoint.y === point.y && currentPolygonPoints.length >= 3) {
+          // Cerrar el polígono fusionando el último punto con el primero
+          const newPolygon: WallPolygon = {
+            id: `polygon-${Date.now()}`,
+            points: [...currentPolygonPoints], // No añadimos el punto duplicado, solo marcamos como cerrado
+            fillColor: getRandomColor(),
+            isClosed: true
+          };
+          setPolygons(prev => [...prev, newPolygon]);
+          setCurrentPolygonPoints([]);
+          setIsDrawingWall(false);
+          setTool('select');
+          return;
+        }
+
         // Evitar duplicar el mismo punto
         const lastPoint = currentPolygonPoints[currentPolygonPoints.length - 1];
         if (lastPoint && lastPoint.x === point.x && lastPoint.y === point.y) {
