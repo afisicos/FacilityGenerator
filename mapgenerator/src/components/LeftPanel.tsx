@@ -160,11 +160,6 @@ export function LeftPanel({
         )}
         </div>
       </div>
-      {tool === 'drawWall' && (
-        <div className="tool-hint">
-          💡 Left click to add points to the wall polygon . Right click to finish.
-        </div>
-      )}
       {isAddingToPolygon && (
         <div className="tool-hint">
           💡 Left click to add points. Right click to finish.

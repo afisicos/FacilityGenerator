@@ -118,47 +118,14 @@
 
 .app-title {
   margin: 0;
-  font-size: 2.2rem;
-  font-weight: 900;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 25%, #ec4899 50%, #f97316 75%, #eab308 100%);
-  background-size: 200% 200%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-size: 2rem;
+  font-weight: 600;
+  background: white;
   background-clip: text;
-  letter-spacing: 0.05em;
-  text-shadow:
-    0 4px 8px rgba(0, 0, 0, 0.6),
-    0 2px 4px rgba(0, 0, 0, 0.4);
-  animation: titleGradient 3s ease-in-out infinite;
+  letter-spacing: 0.04em;
   position: relative;
 }
 
-@keyframes titleGradient {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-.app-title::after {
-  content: '';
-  position: absolute;
-  bottom: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60%;
-  height: 3px;
-  background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899, #f97316, #eab308);
-  background-size: 200% 200%;
-  animation: titleGradient 3s ease-in-out infinite;
-  border-radius: 2px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-}
 
 .top-bar-spacer {
   width: 140px; /* Espacio para balancear los botones del lado izquierdo */
@@ -394,6 +361,25 @@
   color: #a0a0ff;
 }
 
+.tool-hint-container {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.tool-hint-left {
+  flex: 1;
+  text-align: left;
+}
+
+.tool-hint-right {
+  flex: 1;
+  text-align: right;
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
 .export-section {
   display: flex;
   flex-direction: column;
@@ -533,6 +519,42 @@
     opacity: 1;
     transform: translateX(-50%) translateY(0);
   }
+}
+
+/* Drawing Hints Container */
+.drawing-hints-container {
+  position: fixed;
+  top: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  z-index: 150;
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.drawing-hint-left,
+.drawing-hint-right {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  backdrop-filter: blur(10px);
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+.drawing-hint-left {
+  background: rgba(100, 108, 255, 0.15);
+  border-color: rgba(100, 108, 255, 0.4);
+  color: #a0a0ff;
+}
+
+.drawing-hint-right {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
 }
 
 /* Selected Polygon Floating Panel */

@@ -161,7 +161,7 @@ export function useMapHandlers(state: MapState, canvasRef: React.RefObject<HTMLD
   } = state;
 
   const finishPolygon = useCallback(() => {
-    if (currentPolygonPoints.length >= 3) {
+    if (currentPolygonPoints.length >= 2) {
       const newPolygon: WallPolygon = {
         id: `polygon-${Date.now()}`,
         points: [...currentPolygonPoints],

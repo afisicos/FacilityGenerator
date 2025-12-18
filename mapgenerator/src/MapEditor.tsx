@@ -389,15 +389,6 @@ export default function MapEditor() {
         onPointDoubleClick={handlePointDoubleClick}
       />
 
-      {/* Drawing hint panel */}
-      {isDrawingWall && (
-        <div
-          className="drawing-hint-panel"
-        >
-          Right-click to finish wall
-        </div>
-      )}
-
       {/* Selected Polygon Info Panel */}
       {selectedPolygonInfo && (
         <div className="selected-polygon-panel">
@@ -420,6 +411,18 @@ export default function MapEditor() {
                 <span className="detail-value">{selectedPolygonInfo.selectedPointsCount}</span>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Drawing hints */}
+      {tool === 'drawWall' && (
+        <div className="drawing-hints-container">
+          <div className="drawing-hint-left">
+            Left click to add points
+          </div>
+          <div className="drawing-hint-right">
+            Right click to finish wall
           </div>
         </div>
       )}
