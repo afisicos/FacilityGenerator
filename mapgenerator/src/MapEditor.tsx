@@ -16,6 +16,7 @@ import { useMapHandlers } from './hooks/useMapHandlers';
 import { exportToOBJ, exportFloorToOBJ } from './utils/objExport';
 import { LeftPanel } from './components/LeftPanel';
 import { RightPanel } from './components/RightPanel';
+import { BottomBar } from './components/BottomBar';
 import { Canvas } from './components/Canvas';
 
 export default function MapEditor() {
@@ -50,9 +51,7 @@ export default function MapEditor() {
     visiblePolygons,
     setVisiblePolygons,
     exportTogether,
-    setExportTogether,
     floorWithVolume,
-    setFloorWithVolume,
     lockedPolygons,
     togglePolygonLock,
     setSelectedPolygonId,
@@ -322,6 +321,20 @@ export default function MapEditor() {
           >
             🔄
           </button>
+          <button
+            className="scenario-icon-button export-button"
+            onClick={handleExportWalls}
+            title="Export all walls together to OBJ 3D format"
+          >
+            📦
+          </button>
+          <button
+            className="scenario-icon-button export-button"
+            onClick={handleExportFloor}
+            title="Export all floors"
+          >
+            🏢
+          </button>
         </div>
         <h1 className="app-title">3D Facility Generator</h1>
         <div className="top-bar-spacer"></div>
@@ -345,17 +358,9 @@ export default function MapEditor() {
       />
       
       <RightPanel
-        wallHeight={wallHeight}
-        wallThickness={wallThickness}
         polygons={polygons}
         visiblePolygons={visiblePolygons}
         lockedPolygons={lockedPolygons}
-        exportTogether={exportTogether}
-        floorWithVolume={floorWithVolume}
-        onExportWalls={handleExportWalls}
-        onExportFloor={handleExportFloor}
-        onWallHeightChange={setWallHeight}
-        onWallThicknessChange={setWallThickness}
         onTogglePolygonVisibility={(id) => {
           const newVisible = new Set(visiblePolygons);
           if (newVisible.has(id)) {
@@ -366,8 +371,6 @@ export default function MapEditor() {
           setVisiblePolygons(newVisible);
         }}
         onTogglePolygonLock={togglePolygonLock}
-        onToggleExportTogether={() => setExportTogether(!exportTogether)}
-        onToggleFloorVolume={() => setFloorWithVolume(!floorWithVolume)}
         onRenamePolygon={handleRenamePolygon}
         onChangePolygonColor={handleChangePolygonColor}
       />
@@ -442,6 +445,14 @@ export default function MapEditor() {
       >
         Zoom: {Math.round(zoom * 100)}%
       </div>
+
+      {/* Bottom Bar */}
+      <BottomBar
+        wallHeight={wallHeight}
+        wallThickness={wallThickness}
+        onWallHeightChange={setWallHeight}
+        onWallThicknessChange={setWallThickness}
+      />
     </div>
   );
 }

@@ -1,91 +1,20 @@
 import { useState } from 'react';
 import type { WallPolygon } from '../types';
 
-// Enhanced Slider Input Component
-interface SliderInputProps {
-  label: string;
-  value: number;
-  onChange: (value: number) => void;
-  min: number;
-  max: number;
-  step: number;
-  unit?: string;
-}
-
-function SliderInput({ label, value, onChange, min, max, step, unit = '' }: SliderInputProps) {
-  const percentage = ((value - min) / (max - min)) * 100;
-
-  return (
-    <div className="enhanced-slider-container">
-      <div className="enhanced-slider-header">
-        <label className="enhanced-slider-label">{label}</label>
-        <div className="enhanced-slider-value-display">
-          <span className="enhanced-slider-value">{value}</span>
-          <span className="enhanced-slider-unit">{unit}</span>
-        </div>
-      </div>
-
-      <div className="enhanced-slider-wrapper">
-        <input
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={(e) => onChange(parseFloat(e.target.value))}
-          className="enhanced-slider-input"
-        />
-
-        <div className="enhanced-slider-track">
-          <div
-            className="enhanced-slider-fill"
-            style={{ width: `${percentage}%` }}
-          />
-          <div
-            className="enhanced-slider-thumb"
-            style={{ left: `${percentage}%` }}
-          />
-        </div>
-      </div>
-
-      <div className="enhanced-slider-range">
-        <span className="enhanced-slider-min">{min}</span>
-        <span className="enhanced-slider-max">{max}</span>
-      </div>
-    </div>
-  );
-}
-
 interface RightPanelProps {
-  wallHeight: number;
-  wallThickness: number;
   polygons: WallPolygon[];
   visiblePolygons: Set<string>;
   lockedPolygons: Set<string>;
-  exportTogether: boolean;
-  floorWithVolume: boolean;
-  onExportWalls: () => void;
-  onExportFloor: () => void;
-  onWallHeightChange: (height: number) => void;
-  onWallThicknessChange: (thickness: number) => void;
   onTogglePolygonVisibility: (id: string) => void;
   onTogglePolygonLock: (id: string) => void;
-  onToggleExportTogether: () => void;
-  onToggleFloorVolume: () => void;
   onRenamePolygon: (id: string, name: string) => void;
   onChangePolygonColor: (id: string, color: string) => void;
 }
 
 export function RightPanel({
-  wallHeight,
-  wallThickness,
   polygons,
   visiblePolygons,
   lockedPolygons,
-  onExportWalls,
-  onExportFloor,
-  onWallHeightChange,
-  onWallThicknessChange,
   onTogglePolygonVisibility,
   onTogglePolygonLock,
   onRenamePolygon,
@@ -95,61 +24,20 @@ export function RightPanel({
   const [editingName, setEditingName] = useState<string>('');
   return (
     <div className="side-panel right-panel">
-      <div className="export-section">
-      
-        <button
-          className="tool-button export-button"
-          onClick={onExportWalls}
-          title="Export all walls together to OBJ 3D format"
-        >
-          📦 Export Walls
-        </button>
-
-
-        <button
-          className="tool-button export-button"
-          onClick={onExportFloor}
-          title="Export all floors"
-        >
-          🏢 Export Floor
-        </button>
-        <div className="wall-parameters">
-          <SliderInput
-            label="Wall Height"
-            value={wallHeight}
-            onChange={onWallHeightChange}
-            min={1}
-            max={50}
-            step={1}
-            unit=" units"
-          />
-
-          <SliderInput
-            label="Wall Thickness"
-            value={wallThickness}
-            onChange={onWallThicknessChange}
-            min={0.1}
-            max={10}
-            step={0.1}
-            unit=" units"
-          />
-        </div>
-      </div>
-
       {/* Polygon List */}
       {polygons.length > 0 && (
         <div style={{
-          marginTop: '20px',
-          paddingTop: '20px',
+          marginTop: '8px',
+          paddingTop: '8px',
           borderTop: '1px solid rgba(255, 255, 255, 0.1)',
           flex: 1,
           overflowY: 'auto',
           width: '100%',
           minHeight: 0
         }}>
-          <h3 style={{ 
-            fontSize: '12px', 
-            marginBottom: '12px', 
+          <h3 style={{
+            fontSize: '11px',
+            marginBottom: '8px',
             color: '#888',
             textTransform: 'uppercase',
             letterSpacing: '0.5px',
@@ -157,7 +45,7 @@ export function RightPanel({
           }}>
             Polylines ({polygons.length})
           </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%' }}>
             {polygons.map((polygon, index) => {
               const isVisible = visiblePolygons.has(polygon.id);
               const isLocked = lockedPolygons.has(polygon.id);
@@ -167,13 +55,13 @@ export function RightPanel({
               return (
                 <div
                   key={polygon.id}
-                  style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
                     justifyContent: 'space-between',
-                    gap: '8px',
-                    padding: '10px 12px',
-                    borderRadius: '6px',
+                    gap: '6px',
+                    padding: '6px 8px',
+                    borderRadius: '4px',
                     backgroundColor: isVisible 
                       ? 'rgba(100, 108, 255, 0.15)' 
                       : 'rgba(255, 255, 255, 0.03)',
@@ -231,9 +119,9 @@ export function RightPanel({
                           background: 'rgba(0, 0, 0, 0.3)',
                           border: '1px solid rgba(100, 108, 255, 0.5)',
                           borderRadius: '4px',
-                          padding: '4px 8px',
+                          padding: '3px 6px',
                           color: '#fff',
-                          fontSize: '13px',
+                          fontSize: '12px',
                           fontWeight: 500,
                           outline: 'none'
                         }}
@@ -242,7 +130,7 @@ export function RightPanel({
                     ) : (
                       <span
                         style={{
-                          fontSize: '13px',
+                          fontSize: '12px',
                           fontWeight: 500,
                           color: isVisible ? (isLocked ? '#aaa' : '#fff') : '#666',
                           transition: 'color 0.2s ease',
@@ -263,8 +151,8 @@ export function RightPanel({
                       >
                         {displayName}
                         <span style={{
-                          fontSize: '11px',
-                          marginLeft: '6px',
+                          fontSize: '10px',
+                          marginLeft: '4px',
                           opacity: 0.7,
                           fontWeight: 400
                         }}>
@@ -282,10 +170,10 @@ export function RightPanel({
                       }}
                       disabled={isLocked}
                       style={{
-                        width: '24px',
-                        height: '24px',
+                        width: '20px',
+                        height: '20px',
                         border: 'none',
-                        borderRadius: '4px',
+                        borderRadius: '3px',
                         cursor: isLocked ? 'not-allowed' : 'pointer',
                         background: 'none',
                         flexShrink: 0,
@@ -298,7 +186,7 @@ export function RightPanel({
                   {/* Lock Button */}
                   <span
                     style={{
-                      fontSize: '16px',
+                      fontSize: '14px',
                       transition: 'all 0.2s ease',
                       cursor: 'pointer',
                       flexShrink: 0,
@@ -314,7 +202,7 @@ export function RightPanel({
                   </span>
                   <span
                     style={{
-                      fontSize: '18px',
+                      fontSize: '16px',
                       transition: 'all 0.2s ease',
                       opacity: isVisible ? 1 : 0.4,
                       cursor: 'pointer',
