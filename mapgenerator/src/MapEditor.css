@@ -167,6 +167,7 @@
   left: 0;
   width: 140px;
   border-right: 2px solid #3a3a3a;
+  padding-top: 1rem;
 }
 
 .right-panel {
@@ -174,6 +175,7 @@
   width: 200px;
   border-left: 2px solid #3a3a3a;
   align-items: flex-end;
+  padding-top: 1rem;
 }
 
 .panel-title {

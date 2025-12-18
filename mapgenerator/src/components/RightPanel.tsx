@@ -24,27 +24,26 @@ export function RightPanel({
   const [editingName, setEditingName] = useState<string>('');
   return (
     <div className="side-panel right-panel">
+      <h3 style={{
+        fontSize: '11px',
+        marginBottom: '8px',
+        color: '#888',
+        textTransform: 'uppercase',
+        letterSpacing: '0.5px',
+        fontWeight: 500,
+        textAlign: 'center',
+        width: '100%'
+      }}>
+        Polylines
+      </h3>
       {/* Polygon List */}
       {polygons.length > 0 && (
         <div style={{
-          marginTop: '8px',
-          paddingTop: '8px',
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
           flex: 1,
           overflowY: 'auto',
           width: '100%',
           minHeight: 0
         }}>
-          <h3 style={{
-            fontSize: '11px',
-            marginBottom: '8px',
-            color: '#888',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-            fontWeight: 500
-          }}>
-            Polylines ({polygons.length})
-          </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%' }}>
             {polygons.map((polygon, index) => {
               const isVisible = visiblePolygons.has(polygon.id);

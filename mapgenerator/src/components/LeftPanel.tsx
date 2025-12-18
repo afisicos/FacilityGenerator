@@ -93,6 +93,18 @@ export function LeftPanel({
 
   return (
     <div className="side-panel left-panel">
+      <h3 style={{
+        fontSize: '11px',
+        marginBottom: '8px',
+        color: '#888',
+        textTransform: 'uppercase',
+        letterSpacing: '0.5px',
+        fontWeight: 500,
+        textAlign: 'center',
+        width: '100%'
+      }}>
+        Tools
+      </h3>
       {/* Tools Section */}
       <div className="tools-section">
         <div className="panel-buttons">
