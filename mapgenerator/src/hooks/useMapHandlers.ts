@@ -641,7 +641,8 @@ export function useMapHandlers(state: MapState, canvasRef: React.RefObject<HTMLD
         newPolygons.push({
           id: newId,
           name: polygon.name,
-          points: firstPart
+          points: firstPart,
+          isClosed: false
         });
         newPolygonIds.push(newId);
       }
@@ -652,7 +653,8 @@ export function useMapHandlers(state: MapState, canvasRef: React.RefObject<HTMLD
         newPolygons.push({
           id: newId,
           name: polygon.name,
-          points: secondPart
+          points: secondPart,
+          isClosed: false
         });
         newPolygonIds.push(newId);
       }
@@ -792,7 +794,8 @@ export function useMapHandlers(state: MapState, canvasRef: React.RefObject<HTMLD
           id: polygon.id || `polygon-${Date.now()}-${Math.random()}`,
           name: polygon.name,
           points: polygon.points,
-          fillColor: polygon.fillColor || getRandomColor()
+          fillColor: polygon.fillColor || getRandomColor(),
+          isClosed: polygon.isClosed || false
         }));
 
         setPolygons(loadedPolygons);
